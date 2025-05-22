@@ -6,7 +6,7 @@ import random
 pygame.init()
 
 # Window settings
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1024, 768
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Bomb Squad Trail")
 
