@@ -100,12 +100,10 @@ while running:
                         current_event = random.choice(event_options)
                         state = EVENT
                     else:
-                        # You could jump to minigame or outcome here as needed
-                        state = MINIGAME
+                        pass  # No event occurs, continue traveling or add logic here
             elif state == EVENT:
                 if event.key == pygame.K_1:
                     # Good choice: +morale, -fuel
-                    global morale, fuel
                     morale = min(morale + 5, 100)
                     fuel = max(fuel - 10, 0)
                     state = TRAVEL
@@ -116,6 +114,7 @@ while running:
                         success = False
                         state = OUTCOME
                     else:
+                        state = TRAVEL
                         state = TRAVEL
             elif state == MINIGAME:
                 if event.key == pygame.K_SPACE:
