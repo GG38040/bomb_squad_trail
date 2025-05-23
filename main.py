@@ -157,20 +157,20 @@ def event_screen(event):
 
 def minigame_screen():
     global ied_game, state, morale, robot_battery, success
-    
+
     if ied_game is None:
         ied_game = IEDMiniGame(WIDTH, HEIGHT, morale, robot_battery)
-    
+
     # Update game state
     ied_game.update()
-    
+
     # Draw game
     ied_game.draw(SCREEN)
-    
-    # Display controls
-    draw_text("Arrow keys to move, SPACE to switch operator", 
-             SMALL_FONT, WHITE, SCREEN, 180, HEIGHT - 40)
-    
+
+    # Display controls at the bottom of the screen
+    draw_text("Arrow keys to move | SPACE to switch between Talon and Bomb Suit", 
+              SMALL_FONT, WHITE, SCREEN, 180, HEIGHT - 40)
+
     if ied_game.game_over:
         if ied_game.success:
             morale = ied_game.morale
@@ -209,6 +209,7 @@ current_event = None
 running = True
 success = True
 while running:
+    # Handle events first
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -256,8 +257,20 @@ while running:
                             state = OUTCOME
                         else:
                             state = TRAVEL
+            elif state == OUTCOME:
+                if event.key == pygame.K_q:
+                    running = False
             elif state == MINIGAME:
-                keys = pygame.key.get_pressed()  # Get all currently pressed keys
+                # Process events
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_SPACE:
+                            ied_game.switch_sprite()  # Call the switch_sprite method
+
+                # Get keyboard state for movement
+                keys = pygame.key.get_pressed()
                 if keys[pygame.K_LEFT]:
                     ied_game.move_player(-1, 0)
                 if keys[pygame.K_RIGHT]:
@@ -266,11 +279,9 @@ while running:
                     ied_game.move_player(0, -1)
                 if keys[pygame.K_DOWN]:
                     ied_game.move_player(0, 1)
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    ied_game.switch_sprite()
-            elif state == OUTCOME:
-                if event.key == pygame.K_q:
-                    running = False
+
+                # Update and draw the minigame
+                minigame_screen()
 
     # Draw current screen
     if state == MENU:
@@ -281,24 +292,48 @@ while running:
         event_screen(current_event)
     elif state == MINIGAME:
         minigame_screen()
-        if ied_game and ied_game.game_over:
-            if ied_game.success:
-                pygame.time.delay(2000)  # Show victory screen for 2 seconds
-                state = TRAVEL
-            else:
-                pygame.time.delay(3000)  # Show game over screen longer
-                success = False
-                state = OUTCOME
     elif state == OUTCOME:
         outcome_screen(success)
-        # Only continue if successful, otherwise quit
-        if success and event.type == pygame.KEYDOWN and event.key == pygame.K_q:
-            state = TRAVEL
-        elif not success and event.type == pygame.KEYDOWN and event.key == pygame.K_q:
-            running = False
 
     pygame.display.flip()
-    pygame.time.Clock().tick(30)
+    pygame.time.Clock().tick(60)  # Increased to 60 FPS for smoother movement
 
 pygame.quit()
 sys.exit()
+
+def spawn_obstacle(self):
+    """Spawn new falling obstacle at random x position"""
+    x = random.randint(0, self.width - 50)
+    obstacle_type = random.choice(['tnt', 'doge'])
+    sprite = self.tnt_sprite if obstacle_type == 'tnt' else self.doge_sprite
+    self.obstacles.append({
+        'type': obstacle_type,
+        'pos': [x, -50],
+        'sprite': sprite
+    })
+    print(f"Spawned obstacle: {obstacle_type} at x={x}")
+
+def check_collision_with_obstacles(self):
+    """Check if player has collided with any falling obstacles"""
+    player_rect = pygame.Rect(self.player_pos[0], self.player_pos[1], 120, 120)
+    
+    for obstacle in self.obstacles:
+        obstacle_rect = pygame.Rect(obstacle['pos'][0], obstacle['pos'][1], 50, 50)
+        if player_rect.colliderect(obstacle_rect):
+            print(f"Collision detected with obstacle at {obstacle['pos']}")
+            self.game_over = True
+            self.success = False
+            return True
+    return False
+
+def check_ied_collision(self):
+    """Check if player has found the IED"""
+    player_rect = pygame.Rect(self.player_pos[0], self.player_pos[1], 120, 120)
+    ied_rect = pygame.Rect(self.ied_pos[0], self.ied_pos[1], 40, 40)
+    
+    if player_rect.colliderect(ied_rect):
+        print(f"IED found at {self.ied_pos}")
+        self.game_over = True
+        self.success = True
+        return True
+    return False
