@@ -17,6 +17,16 @@ pygame.display.set_caption("Bomb Squad Trail")
 
 # Load background sprite
 try:
+    menu_background_path = os.path.join(current_dir, "assets", "mission_start_background.png")
+    menu_background = pygame.image.load(menu_background_path).convert()
+    menu_background = pygame.transform.scale(menu_background, (WIDTH, HEIGHT))
+    print(f"Menu background loaded: {menu_background.get_size()}")
+except pygame.error as e:
+    print(f"Couldn't load menu background: {e}")
+    menu_background = pygame.Surface((WIDTH, HEIGHT))
+    menu_background.fill(NAVY)
+
+try:
     background_path = os.path.join(current_dir, "assets", "traveling_background.png")
     background = pygame.image.load(background_path).convert()
     background = pygame.transform.scale(background, (WIDTH, HEIGHT))
@@ -115,10 +125,15 @@ def draw_text(text, font, color, surface, x, y):
         surface.blit(txt, (x, y + i * font.get_height()))
 
 def menu_screen():
-    SCREEN.fill(NAVY)
-    draw_text("Bomb Squad Trail", FONT, WHITE, SCREEN, 280, 120)
+    # Use background image instead of solid color
+    SCREEN.blit(menu_background, (0, 0))
+    
+    # Only show numbers and options
     draw_text("1. Start Mission", SMALL_FONT, WHITE, SCREEN, 320, 240)
-    draw_text("2. Quit", SMALL_FONT, WHITE, SCREEN, 320, 280)
+    draw_text("2. Quit Game", SMALL_FONT, WHITE, SCREEN, 320, 280)
+    draw_text("3. TBD", SMALL_FONT, WHITE, SCREEN, 320, 320)
+    draw_text("4. TBD", SMALL_FONT, WHITE, SCREEN, 320, 360)
+    draw_text("5. TBD", SMALL_FONT, WHITE, SCREEN, 320, 400)
 
 def event_screen(event_text):
     SCREEN.fill(NAVY)
@@ -161,6 +176,12 @@ while running:
                     state = TRAVEL
                 elif event.key == pygame.K_2:
                     running = False
+                elif event.key == pygame.K_3:
+                    pass  # TBD - Placeholder for future feature
+                elif event.key == pygame.K_4:
+                    pass  # TBD - Placeholder for future feature
+                elif event.key == pygame.K_5:
+                    pass  # TBD - Placeholder for future feature
             elif state == TRAVEL:
                 if event.key == pygame.K_SPACE:
                     # Random chance for event
@@ -182,7 +203,6 @@ while running:
                         success = False
                         state = OUTCOME
                     else:
-                        state = TRAVEL
                         state = TRAVEL
             elif state == MINIGAME:
                 if event.key == pygame.K_SPACE:
