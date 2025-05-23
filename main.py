@@ -156,7 +156,7 @@ def event_screen(event):
     draw_text(f"2. {event.risk_choice}", SMALL_FONT, WHITE, SCREEN, 180, 320)  # Use event.risk_choice
 
 def minigame_screen():
-    global ied_game, state, morale, robot_battery
+    global ied_game, state, morale, robot_battery, success
     
     if ied_game is None:
         ied_game = IEDMiniGame(WIDTH, HEIGHT, morale, robot_battery)
@@ -175,20 +175,33 @@ def minigame_screen():
         if ied_game.success:
             morale = ied_game.morale
             robot_battery = ied_game.battery
-            state = OUTCOME
             success = True
         else:
-            state = OUTCOME
             success = False
+        state = OUTCOME
         ied_game = None  # Reset for next time
 
 def outcome_screen(success):
-    SCREEN.fill((10, 50, 10))
     if success:
-        draw_text("Mission Success!", FONT, WHITE, SCREEN, 280, 220)
+        # Victory screen for completing IED minigame
+        SCREEN.fill((0, 50, 0))  # Dark green background
+        draw_text("HOYAHHH NAVY EOD!!!", FONT, WHITE, SCREEN, WIDTH//2 - 200, HEIGHT//2 - 50)
+        draw_text("LLTB", FONT, WHITE, SCREEN, WIDTH//2 - 50, HEIGHT//2 + 50)
+        draw_text("Press Q to continue", SMALL_FONT, WHITE, SCREEN, WIDTH//2 - 100, HEIGHT - 100)
     else:
-        draw_text("Mission Failed!", FONT, RED, SCREEN, 280, 220)
-    draw_text("Press Q to quit.", SMALL_FONT, WHITE, SCREEN, 330, 300)
+        # Load and display game over background
+        try:
+            gameover_path = os.path.join(current_dir, "assets", "game_over.png")
+            gameover_image = pygame.image.load(gameover_path).convert()
+            gameover_image = pygame.transform.scale(gameover_image, (WIDTH, HEIGHT))
+            SCREEN.blit(gameover_image, (0, 0))
+        except pygame.error as e:
+            print(f"Error loading game over image: {e}")
+            SCREEN.fill((50, 0, 0))  # Fallback to red background
+            
+        draw_text("Game Over", FONT, RED, SCREEN, WIDTH//2 - 100, HEIGHT//2 - 50)
+        draw_text("Initial Success or Total Failure", FONT, WHITE, SCREEN, WIDTH//2 - 250, HEIGHT//2 + 50)
+        draw_text("Press Q to quit", SMALL_FONT, WHITE, SCREEN, WIDTH//2 - 100, HEIGHT - 100)
 
 current_event = None
 
@@ -244,8 +257,17 @@ while running:
                         else:
                             state = TRAVEL
             elif state == MINIGAME:
-                if event.key == pygame.K_SPACE:
-                    state = OUTCOME
+                keys = pygame.key.get_pressed()  # Get all currently pressed keys
+                if keys[pygame.K_LEFT]:
+                    ied_game.move_player(-1, 0)
+                if keys[pygame.K_RIGHT]:
+                    ied_game.move_player(1, 0)
+                if keys[pygame.K_UP]:
+                    ied_game.move_player(0, -1)
+                if keys[pygame.K_DOWN]:
+                    ied_game.move_player(0, 1)
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    ied_game.switch_sprite()
             elif state == OUTCOME:
                 if event.key == pygame.K_q:
                     running = False
@@ -259,8 +281,21 @@ while running:
         event_screen(current_event)
     elif state == MINIGAME:
         minigame_screen()
+        if ied_game and ied_game.game_over:
+            if ied_game.success:
+                pygame.time.delay(2000)  # Show victory screen for 2 seconds
+                state = TRAVEL
+            else:
+                pygame.time.delay(3000)  # Show game over screen longer
+                success = False
+                state = OUTCOME
     elif state == OUTCOME:
         outcome_screen(success)
+        # Only continue if successful, otherwise quit
+        if success and event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+            state = TRAVEL
+        elif not success and event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+            running = False
 
     pygame.display.flip()
     pygame.time.Clock().tick(30)
