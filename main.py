@@ -2,10 +2,12 @@ import pygame
 import sys
 import random
 import math
-import os 
+import os
+from game import GameEvents, IEDMiniGame
 
 # Initialize Pygame
 pygame.init()
+game_events = GameEvents()
 
 # Get current directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -18,11 +20,13 @@ pygame.display.set_caption("Bomb Squad Trail")
 # Load background sprite
 try:
     menu_background_path = os.path.join(current_dir, "assets", "mission_start_background.png")
+    print(f"Attempting to load menu background from: {menu_background_path}")
     menu_background = pygame.image.load(menu_background_path).convert()
     menu_background = pygame.transform.scale(menu_background, (WIDTH, HEIGHT))
-    print(f"Menu background loaded: {menu_background.get_size()}")
+    print(f"Menu background loaded successfully: {menu_background.get_size()}")
 except pygame.error as e:
-    print(f"Couldn't load menu background: {e}")
+    print(f"ERROR loading menu background: {e}")
+    print(f"Attempted path: {menu_background_path}")
     menu_background = pygame.Surface((WIDTH, HEIGHT))
     menu_background.fill(NAVY)
 
@@ -111,6 +115,7 @@ OUTCOME = 'outcome'
 
 # Set initial state
 state = MENU
+ied_game = None  # Add this line
 
 # Resources
 team = ["Bomb Tech", "Driver", "Robot Operator", "Team Leader"]
@@ -125,27 +130,57 @@ def draw_text(text, font, color, surface, x, y):
         surface.blit(txt, (x, y + i * font.get_height()))
 
 def menu_screen():
-    # Use background image instead of solid color
-    SCREEN.blit(menu_background, (0, 0))
+    # Clear screen first
+    SCREEN.fill(BLACK)
     
-    # Only show numbers and options
-    draw_text("1. Start Mission", SMALL_FONT, WHITE, SCREEN, 320, 240)
-    draw_text("2. Quit Game", SMALL_FONT, WHITE, SCREEN, 320, 280)
-    draw_text("3. TBD", SMALL_FONT, WHITE, SCREEN, 320, 320)
-    draw_text("4. TBD", SMALL_FONT, WHITE, SCREEN, 320, 360)
-    draw_text("5. TBD", SMALL_FONT, WHITE, SCREEN, 320, 400)
+    # Make sure menu_background exists and is loaded
+    if menu_background:
+        SCREEN.blit(menu_background, (0, 0))
+    
+    # Add debug print
+    # print(f"Current game state: {state}")
+    
+    # Make text more visible - adjust color if needed
+    text_color = WHITE
+    draw_text("1. Start Mission", SMALL_FONT, text_color, SCREEN, WIDTH//2 - 100, HEIGHT//2)
+    draw_text("2. Quit Game", SMALL_FONT, text_color, SCREEN, WIDTH//2 - 100, HEIGHT//2 + 40)
+    draw_text("3. TBD", SMALL_FONT, text_color, SCREEN, WIDTH//2 - 100, HEIGHT//2 + 80)
+    draw_text("4. TBD", SMALL_FONT, text_color, SCREEN, WIDTH//2 - 100, HEIGHT//2 + 120)
+    draw_text("5. TBD", SMALL_FONT, text_color, SCREEN, WIDTH//2 - 100, HEIGHT//2 + 160)
 
-def event_screen(event_text):
+def event_screen(event):
     SCREEN.fill(NAVY)
     draw_text("Random Event!", FONT, WHITE, SCREEN, 280, 120)
-    draw_text(event_text, SMALL_FONT, WHITE, SCREEN, 180, 200)
-    draw_text("1. Take the safe route", SMALL_FONT, WHITE, SCREEN, 180, 280)
-    draw_text("2. Take a risk", SMALL_FONT, WHITE, SCREEN, 180, 320)
+    draw_text(event.description, SMALL_FONT, WHITE, SCREEN, 180, 200)  # Use event.description
+    draw_text(f"1. {event.safe_choice}", SMALL_FONT, WHITE, SCREEN, 180, 280)  # Use event.safe_choice
+    draw_text(f"2. {event.risk_choice}", SMALL_FONT, WHITE, SCREEN, 180, 320)  # Use event.risk_choice
 
 def minigame_screen():
-    SCREEN.fill((30, 30, 60))
-    draw_text("Bomb Defusal (placeholder)", FONT, WHITE, SCREEN, 180, 180)
-    draw_text("Press SPACE to return to travel", SMALL_FONT, WHITE, SCREEN, 230, 400)
+    global ied_game, state, morale, robot_battery
+    
+    if ied_game is None:
+        ied_game = IEDMiniGame(WIDTH, HEIGHT, morale, robot_battery)
+    
+    # Update game state
+    ied_game.update()
+    
+    # Draw game
+    ied_game.draw(SCREEN)
+    
+    # Display controls
+    draw_text("Arrow keys to move, SPACE to switch operator", 
+             SMALL_FONT, WHITE, SCREEN, 180, HEIGHT - 40)
+    
+    if ied_game.game_over:
+        if ied_game.success:
+            morale = ied_game.morale
+            robot_battery = ied_game.battery
+            state = OUTCOME
+            success = True
+        else:
+            state = OUTCOME
+            success = False
+        ied_game = None  # Reset for next time
 
 def outcome_screen(success):
     SCREEN.fill((10, 50, 10))
@@ -155,13 +190,7 @@ def outcome_screen(success):
         draw_text("Mission Failed!", FONT, RED, SCREEN, 280, 220)
     draw_text("Press Q to quit.", SMALL_FONT, WHITE, SCREEN, 330, 300)
 
-# Example event
-event_options = [
-    "IED detected ahead! How will you respond?",
-    "Truck breaks down. What do you do?",
-    "Talon robot battery low. Continue or stop to charge?",
-]
-current_event = ""
+current_event = None
 
 # Main loop
 running = True
@@ -184,26 +213,36 @@ while running:
                     pass  # TBD - Placeholder for future feature
             elif state == TRAVEL:
                 if event.key == pygame.K_SPACE:
-                    # Random chance for event
                     if random.randint(1, 3) == 1:
-                        current_event = random.choice(event_options)
+                        current_event = game_events.get_random_event()  # Get Event object instead of string
                         state = EVENT
                     else:
-                        pass  # No event occurs, continue traveling or add logic here
+                        pass
             elif state == EVENT:
                 if event.key == pygame.K_1:
-                    # Good choice: +morale, -fuel
-                    morale = min(morale + 5, 100)
-                    fuel = max(fuel - 10, 0)
-                    state = TRAVEL
-                elif event.key == pygame.K_2:
-                    # Bad choice: -morale, maybe fail
-                    morale = max(morale - 10, 0)
-                    if morale <= 0:
-                        success = False
-                        state = OUTCOME
+                    # Safe choice - Initialize minigame
+                    outcomes = game_events.handle_choice(current_event, True)
+                    if current_event.description.startswith("IED detected"):
+                        state = MINIGAME  # Transition to minigame instead of TRAVEL
                     else:
+                        morale = min(morale + outcomes['morale'], 100)
+                        fuel = max(fuel + outcomes['fuel'], 0)
+                        robot_battery = max(min(robot_battery + outcomes['robot_battery'], 100), 0)
                         state = TRAVEL
+                elif event.key == pygame.K_2:
+                    # Risky choice - Initialize minigame
+                    outcomes = game_events.handle_choice(current_event, False)
+                    if current_event.description.startswith("IED detected"):
+                        state = MINIGAME  # Transition to minigame instead of TRAVEL
+                    else:
+                        morale = max(morale + outcomes['morale'], 0)
+                        fuel = max(fuel + outcomes['fuel'], 0)
+                        robot_battery = max(min(robot_battery + outcomes['robot_battery'], 100), 0)
+                        if morale <= 0:
+                            success = False
+                            state = OUTCOME
+                        else:
+                            state = TRAVEL
             elif state == MINIGAME:
                 if event.key == pygame.K_SPACE:
                     state = OUTCOME
