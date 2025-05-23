@@ -90,24 +90,44 @@ class IEDMiniGame:
             sprite_path = os.path.join(os.path.dirname(__file__), "assets")
             self.robot_sprite = pygame.image.load(os.path.join(sprite_path, "talon_sprite.png")).convert_alpha()
             self.bombsuit_sprite = pygame.image.load(os.path.join(sprite_path, "bombsuite_sprite.png")).convert_alpha()
-            self.robot_sprite = pygame.transform.scale(self.robot_sprite, (60, 60))
-            self.bombsuit_sprite = pygame.transform.scale(self.bombsuit_sprite, (60, 60))
+            # Double the sprite size
+            self.robot_sprite = pygame.transform.scale(self.robot_sprite, (120, 120))  # Changed from 60 to 120
+            self.bombsuit_sprite = pygame.transform.scale(self.bombsuit_sprite, (120, 120))  # Changed from 60 to 120
             self.life_sprite = pygame.image.load(os.path.join(sprite_path, "hair_gel.png")).convert_alpha()
             self.life_sprite = pygame.transform.scale(self.life_sprite, (30, 30))
         except pygame.error as e:
             print(f"Error loading sprites: {e}")
-            self.robot_sprite = pygame.Surface((60, 60))
-            self.bombsuit_sprite = pygame.Surface((60, 60))
+            self.robot_sprite = pygame.Surface((120, 120))  # Changed size here too
+            self.bombsuit_sprite = pygame.Surface((120, 120))
             self.robot_sprite.fill((100, 100, 255))
             self.bombsuit_sprite.fill((255, 100, 100))
             self.life_sprite = pygame.Surface((30, 30))
             self.life_sprite.fill((255, 215, 0))  # Gold color fallback
 
-        # Movement speed
-        self.MOVE_SPEED = 5  # Pixels per movement
+        # Load additional sprites
+        try:
+            self.ied_sprite = pygame.image.load(os.path.join(sprite_path, "9v_battery.png")).convert_alpha()
+            self.ied_sprite = pygame.transform.scale(self.ied_sprite, (40, 40))
+            
+            self.tnt_sprite = pygame.image.load(os.path.join(sprite_path, "tnt_boom.png")).convert_alpha()
+            self.tnt_sprite = pygame.transform.scale(self.tnt_sprite, (50, 50))
+            
+            self.doge_sprite = pygame.image.load(os.path.join(sprite_path, "doge_em.png")).convert_alpha()
+            self.doge_sprite = pygame.transform.scale(self.doge_sprite, (50, 50))
+            
+            self.gameover_image = pygame.image.load(os.path.join(sprite_path, "game_over.png")).convert_alpha()
+            self.gameover_image = pygame.transform.scale(self.gameover_image, (self.width, self.height))
+            # Add game over font
+            self.game_over_font = pygame.font.SysFont("consolas", 48)
+            self.game_over_small_font = pygame.font.SysFont("consolas", 36)
+        except pygame.error as e:
+            print(f"Error loading additional sprites: {e}")
+
+        # Increase movement speed for better control
+        self.MOVE_SPEED = 10  # Increased from 5 to 10
 
         # Initialize game state
-        self.current_sprite = "robot"
+        self.current_sprite = "robot"  # Initial sprite
         self.player_pos = [0, screen_height - 60]
         self.game_over = False
         self.success = False
@@ -117,50 +137,118 @@ class IEDMiniGame:
         self.ied_pos = None
         self.place_ied()
 
+        # Falling obstacles setup
+        self.obstacles = []
+        self.obstacle_speed = 5
+        self.spawn_timer = 0
+        self.spawn_delay = 60  # Frames between obstacle spawns
+
+    def switch_sprite(self):
+        """Switch between robot and bombsuit sprites"""
+        if self.current_sprite == "robot":
+            self.current_sprite = "bombsuit"
+            print("Switched to bombsuit")
+        else:
+            self.current_sprite = "robot"
+            print("Switched to robot")
+        
+        # Reset position when switching to prevent getting stuck
+        self.player_pos = [self.player_pos[0], self.player_pos[1]]
+
+    def check_collision_with_obstacles(self):
+        """Check if player has collided with any falling obstacles"""
+        player_rect = pygame.Rect(self.player_pos[0], self.player_pos[1], 120, 120)
+        
+        for obstacle in self.obstacles:
+            obstacle_rect = pygame.Rect(obstacle['pos'][0], obstacle['pos'][1], 50, 50)
+            if player_rect.colliderect(obstacle_rect):
+                self.game_over = True
+                self.success = False
+                return True
+        return False
+
     def update(self):
         if self.game_over:
             return
 
-        # Drain resources based on current sprite
+        # Update obstacle positions
+        for obstacle in self.obstacles[:]:
+            obstacle['pos'][1] += 5  # Speed of falling obstacles
+            
+            # Remove obstacles that are off screen
+            if obstacle['pos'][1] > self.height:
+                self.obstacles.remove(obstacle)
+
+        # Spawn new obstacles
+        if random.randint(1, 60) == 1:  # Adjust frequency of obstacles
+            obstacle_type = random.choice(['tnt', 'doge'])
+            sprite = self.tnt_sprite if obstacle_type == 'tnt' else self.doge_sprite
+            self.obstacles.append({
+                'type': obstacle_type,
+                'pos': [random.randint(0, self.width - 50), -50],
+                'sprite': sprite
+            })
+
+        # Check for collisions
+        if self.check_collision_with_obstacles():
+            return
+
+        # Update resource drain
         if self.current_sprite == "robot":
             self.battery -= self.BATTERY_DRAIN
             if self.battery <= 0:
-                self.lives -= 1
-                if self.lives <= 0:
-                    self.game_over = True
-                    self.success = False
-                    print("Out of lives!")
-                else:
-                    self.battery = 100  # Reset battery
-                    print(f"Lost a life! {self.lives} remaining")
-        else:  # bombsuit
+                self.game_over = True
+                self.success = False
+        else:
             self.morale -= self.MORALE_DRAIN
             if self.morale <= 0:
-                self.lives -= 1
-                if self.lives <= 0:
-                    self.game_over = True
-                    self.success = False
-                    print("Out of lives!")
-                else:
-                    self.morale = 100  # Reset morale
-                    print(f"Lost a life! {self.lives} remaining")
+                self.game_over = True
+                self.success = False
 
     def draw(self, screen):
-        # Draw game elements
+        if self.game_over:
+            if self.success:
+                # Victory screen - only show when IED is found
+                self.draw_victory_screen(screen)
+            else:
+                # Game over screen - show when collision with obstacles or resources depleted
+                self.draw_game_over_screen(screen)
+            return
+            
+        # Draw normal game screen
         screen.fill((30, 30, 60))
         
-        # Draw resource bars
-        self.draw_resource_bars(screen)
+        # Draw IED target
+        screen.blit(self.ied_sprite, self.ied_pos)
         
-        # Draw current sprite
+        # Draw falling obstacles
+        for obstacle in self.obstacles:
+            screen.blit(obstacle['sprite'], obstacle['pos'])
+        
+        # Draw player sprite
         current_sprite = self.robot_sprite if self.current_sprite == "robot" else self.bombsuit_sprite
         screen.blit(current_sprite, self.player_pos)
         
-        # Draw IED hint (gets redder as player gets closer)
-        self.draw_proximity_indicator(screen)
-
-        # Draw lives in bottom right corner
+        # Draw UI elements
+        self.draw_resource_bars(screen)
         self.draw_lives(screen)
+
+    def draw_game_over_screen(self, screen):
+        """Draw game over screen with text"""
+        # Draw the game over background image
+        screen.blit(self.gameover_image, (0, 0))
+        
+        # Draw "Game Over" text
+        game_over_text = self.game_over_font.render("Game Over", True, (255, 0, 0))
+        screen.blit(game_over_text, 
+                   (self.width//2 - game_over_text.get_width()//2, 
+                    self.height//2 - game_over_text.get_height()))
+        
+        # Draw motto text
+        motto_text = self.game_over_small_font.render("Initial Success or Total Failure", True, (255, 255, 255))
+        screen.blit(motto_text, 
+                   (self.width//2 - motto_text.get_width()//2, 
+                    self.height//2 + motto_text.get_height()))
 
     def draw_resource_bars(self, screen):
         # Battery bar (blue)
@@ -209,3 +297,27 @@ class IEDMiniGame:
             if [x, y] != self.player_pos:  # Don't place IED on player
                 self.ied_pos = [x, y]
                 break
+
+    def spawn_obstacle(self):
+        """Spawn new falling obstacle at random x position"""
+        x = random.randint(0, self.width - 50)
+        obstacle_type = random.choice(['tnt', 'doge'])
+        self.obstacles.append({
+            'type': obstacle_type,
+            'pos': [x, -50],
+            'sprite': self.tnt_sprite if obstacle_type == 'tnt' else self.doge_sprite
+        })
+
+    def draw_victory_screen(self, screen):
+        """Draw victory message"""
+        font = pygame.font.SysFont("consolas", 48)
+        text1 = font.render("HOYAHHH NAVY EOD!!!", True, (255, 255, 0))
+        text2 = font.render("LLTB", True, (255, 255, 0))
+        
+        screen.blit(text1, (self.width//2 - text1.get_width()//2, self.height//2 - 50))
+        screen.blit(text2, (self.width//2 - text2.get_width()//2, self.height//2 + 50))
+
+    def check_collision(self, pos1, pos2):
+        """Check if two positions are close enough to collide"""
+        return (abs(pos1[0] - pos2[0]) < 40 and 
+                abs(pos1[1] - pos2[1]) < 40)
