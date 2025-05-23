@@ -1,15 +1,30 @@
 import pygame
 import sys
 import random
-import math 
+import math
+import os 
 
 # Initialize Pygame
 pygame.init()
+
+# Get current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Window settings
 WIDTH, HEIGHT = 1024, 768
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Bomb Squad Trail")
+
+# Load background sprite
+try:
+    background_path = os.path.join(current_dir, "assets", "traveling_background.png")
+    background = pygame.image.load(background_path).convert()
+    background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+    print(f"Background loaded: {background.get_size()}")
+except pygame.error as e:
+    print(f"Couldn't load background: {e}")
+    background = pygame.Surface((WIDTH, HEIGHT))
+    background.fill(BLACK)
 
 # Truck settings
 TRUCK_WIDTH = 480
@@ -20,7 +35,6 @@ TRUCK_SPEED = 2
 bounce_offset = 0
 bounce_speed = 0.01
 
-# Create a simple truck sprite (placeholder rectangle)
 # Load truck sprite
 try:
     import os
@@ -55,7 +69,9 @@ def draw_truck(surface):
 
 # Modify your travel_screen function
 def travel_screen():
-    SCREEN.fill(BLACK)
+    # Draw background instead of filling with BLACK
+    SCREEN.blit(background, (0, 0))
+    
     # Update and draw truck first
     update_truck()
     draw_truck(SCREEN)
