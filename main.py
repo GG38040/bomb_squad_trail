@@ -12,22 +12,25 @@ SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Bomb Squad Trail")
 
 # Truck settings
-TRUCK_WIDTH = 120
-TRUCK_HEIGHT = 80
+TRUCK_WIDTH = 480
+TRUCK_HEIGHT = 320
 truck_x = -TRUCK_WIDTH
 truck_y = HEIGHT // 2
 TRUCK_SPEED = 2
 bounce_offset = 0
-bounce_speed = 0.1
+bounce_speed = 0.01
 
 # Create a simple truck sprite (placeholder rectangle)
 # Load truck sprite
 try:
-    truck_sprite = pygame.image.load("assets/truck_sprite_mrap.png").convert_alpha()
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    truck_path = os.path.join(current_dir, "assets", "mrap_truck_right_facing.png")
+    truck_sprite = pygame.image.load(truck_path).convert_alpha()
     truck_sprite = pygame.transform.scale(truck_sprite, (TRUCK_WIDTH, TRUCK_HEIGHT))
+    print(f"Truck sprite loaded: {truck_sprite.get_size()}")  # Add here
 except pygame.error as e:
-    print(f"Couldn't load truck sprite: {e}")
-    # Fallback to rectangle if image loading fails
+    print(f"Couldn't load truck sprite from {truck_path}: {e}")
     truck_sprite = pygame.Surface((TRUCK_WIDTH, TRUCK_HEIGHT))
     truck_sprite.fill((100, 100, 100))
 
@@ -53,14 +56,15 @@ def draw_truck(surface):
 # Modify your travel_screen function
 def travel_screen():
     SCREEN.fill(BLACK)
+    # Update and draw truck first
+    update_truck()
+    draw_truck(SCREEN)
+    
+    # Draw text on top
     draw_text("Traveling to next mission site...", FONT, WHITE, SCREEN, 150, 120)
     draw_text(f"Fuel: {fuel} | Robot Battery: {robot_battery} | Morale: {morale}", 
               SMALL_FONT, WHITE, SCREEN, 180, 200)
     draw_text("Press SPACE to continue", SMALL_FONT, WHITE, SCREEN, 250, 400)
-    
-    # Add truck updates and drawing
-    update_truck()
-    draw_truck(SCREEN)
 
 # Colors
 WHITE = (255, 255, 255)
@@ -79,6 +83,7 @@ EVENT = 'event'
 MINIGAME = 'minigame'
 OUTCOME = 'outcome'
 
+# Set initial state
 state = MENU
 
 # Resources
@@ -99,17 +104,12 @@ def menu_screen():
     draw_text("1. Start Mission", SMALL_FONT, WHITE, SCREEN, 320, 240)
     draw_text("2. Quit", SMALL_FONT, WHITE, SCREEN, 320, 280)
 
-def travel_screen():
-    SCREEN.fill(BLACK)
-    draw_text("Traveling to next mission site...", FONT, WHITE, SCREEN, 150, 120)
-    draw_text(f"Fuel: {fuel} | Robot Battery: {robot_battery} | Morale: {morale}", SMALL_FONT, WHITE, SCREEN, 180, 200)
-    draw_text("Press SPACE to continue", SMALL_FONT, WHITE, SCREEN, 250, 400)
-
 def event_screen(event_text):
-    SCREEN.fill((50, 30, 30))
-    draw_text("Incident Occurred!", FONT, RED, SCREEN, 260, 100)
-    draw_text(event_text, SMALL_FONT, WHITE, SCREEN, 120, 200)
-    draw_text("1. Respond Carefully\n2. Rush In", SMALL_FONT, WHITE, SCREEN, 120, 300)
+    SCREEN.fill(NAVY)
+    draw_text("Random Event!", FONT, WHITE, SCREEN, 280, 120)
+    draw_text(event_text, SMALL_FONT, WHITE, SCREEN, 180, 200)
+    draw_text("1. Take the safe route", SMALL_FONT, WHITE, SCREEN, 180, 280)
+    draw_text("2. Take a risk", SMALL_FONT, WHITE, SCREEN, 180, 320)
 
 def minigame_screen():
     SCREEN.fill((30, 30, 60))
