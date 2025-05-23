@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import math 
 
 # Initialize Pygame
 pygame.init()
@@ -9,6 +10,57 @@ pygame.init()
 WIDTH, HEIGHT = 1024, 768
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Bomb Squad Trail")
+
+# Truck settings
+TRUCK_WIDTH = 120
+TRUCK_HEIGHT = 80
+truck_x = -TRUCK_WIDTH
+truck_y = HEIGHT // 2
+TRUCK_SPEED = 2
+bounce_offset = 0
+bounce_speed = 0.1
+
+# Create a simple truck sprite (placeholder rectangle)
+# Load truck sprite
+try:
+    truck_sprite = pygame.image.load("assets/truck_sprite_mrap.png").convert_alpha()
+    truck_sprite = pygame.transform.scale(truck_sprite, (TRUCK_WIDTH, TRUCK_HEIGHT))
+except pygame.error as e:
+    print(f"Couldn't load truck sprite: {e}")
+    # Fallback to rectangle if image loading fails
+    truck_sprite = pygame.Surface((TRUCK_WIDTH, TRUCK_HEIGHT))
+    truck_sprite.fill((100, 100, 100))
+
+# Replace the existing truck surface creation with:
+truck = truck_sprite
+
+def update_truck():
+    global truck_x, truck_y, bounce_offset
+    # Move truck right
+    truck_x += TRUCK_SPEED
+    
+    # Bounce effect
+    bounce_offset = math.sin(pygame.time.get_ticks() * bounce_speed) * 10
+    
+    # Reset truck position when it goes off screen
+    if truck_x > WIDTH:
+        truck_x = -TRUCK_WIDTH
+
+def draw_truck(surface):
+    # Draw truck at current position with bounce offset
+    surface.blit(truck, (truck_x, truck_y + bounce_offset))
+
+# Modify your travel_screen function
+def travel_screen():
+    SCREEN.fill(BLACK)
+    draw_text("Traveling to next mission site...", FONT, WHITE, SCREEN, 150, 120)
+    draw_text(f"Fuel: {fuel} | Robot Battery: {robot_battery} | Morale: {morale}", 
+              SMALL_FONT, WHITE, SCREEN, 180, 200)
+    draw_text("Press SPACE to continue", SMALL_FONT, WHITE, SCREEN, 250, 400)
+    
+    # Add truck updates and drawing
+    update_truck()
+    draw_truck(SCREEN)
 
 # Colors
 WHITE = (255, 255, 255)
