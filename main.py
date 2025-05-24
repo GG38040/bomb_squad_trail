@@ -83,6 +83,7 @@ def draw_truck(surface):
 
 # Modify your travel_screen function
 def travel_screen():
+    global points
     # Draw background instead of filling with BLACK
     SCREEN.blit(background, (0, 0))
     
@@ -95,6 +96,16 @@ def travel_screen():
     draw_text(f"Fuel: {fuel} | Robot Battery: {robot_battery} | Morale: {morale}", 
               SMALL_FONT, WHITE, SCREEN, 180, 200)
     draw_text("Press SPACE to continue", SMALL_FONT, WHITE, SCREEN, 250, 400)
+    
+    # --- Real-time points update ---
+    if game_start_ticks is not None:
+        elapsed_ms = pygame.time.get_ticks() - game_start_ticks
+        points = elapsed_ms // 1000  # 1 point per second
+
+    # Display points in the middle, large and yellow
+    points_text = f"Points: {points}"
+    rendered = POINTS_FONT.render(points_text, True, POINTS_COLOR)
+    SCREEN.blit(rendered, (WIDTH // 2 - rendered.get_width() // 2, HEIGHT - 100))
 
 # Colors
 WHITE = (255, 255, 255)
@@ -105,6 +116,8 @@ RED = (220, 40, 40)
 # Fonts
 FONT = pygame.font.SysFont("consolas", 28)
 SMALL_FONT = pygame.font.SysFont("consolas", 20)
+POINTS_FONT = pygame.font.SysFont("consolas", 40)  # Twice as large as SMALL_FONT
+POINTS_COLOR = (255, 255, 0)  # Bright yellow
 
 # Game states
 MENU = 'menu'
@@ -163,7 +176,7 @@ def event_screen(event):
     pygame.display.flip()
 
 def minigame_screen():
-    global ied_game, state, robot_battery, success
+    global ied_game, state, robot_battery, success, points
 
     if ied_game is None:
         ied_game = IEDMiniGame(WIDTH, HEIGHT, robot_battery)
@@ -187,6 +200,10 @@ def minigame_screen():
                 print("Player has no lives remaining. Transitioning to OUTCOME state.")
                 success = False  # Explicitly set success to False
                 state = OUTCOME  # Transition to OUTCOME state if no lives remain
+                # Calculate points based on time survived
+                if game_start_ticks is not None:
+                    elapsed_ms = pygame.time.get_ticks() - game_start_ticks
+                    points = elapsed_ms // 1000  # 1 point per second
         return
 
     # Update game state
@@ -200,30 +217,9 @@ def minigame_screen():
 
 def outcome_screen(success):
     if success:
-        # Load and display the celebration background
-        try:
-            celebration_path = os.path.join(current_dir, "assets", "celebration_background.png")
-            celebration_image = pygame.image.load(celebration_path).convert()
-            
-            # Scale the image to 75% of the screen size
-            scaled_width = int(WIDTH * 0.75)
-            scaled_height = int(HEIGHT * 0.75)
-            celebration_image = pygame.transform.scale(celebration_image, (scaled_width, scaled_height))
-            
-            # Center the scaled image on the screen
-            x_offset = (WIDTH - scaled_width) // 2
-            y_offset = (HEIGHT - scaled_height) // 2
-            SCREEN.blit(celebration_image, (x_offset, y_offset))
-        except pygame.error as e:
-            print(f"Error loading celebration image: {e}")
-            SCREEN.fill((0, 50, 0))  # Fallback to dark green background
-
-        # Display success messages
-        draw_text("HOYAHHH NAVY EOD!!!", FONT, WHITE, SCREEN, WIDTH // 2 - 200, HEIGHT // 2 - 50)
-        draw_text("LLTB", FONT, WHITE, SCREEN, WIDTH // 2 - 50, HEIGHT // 2 + 50)
-        draw_text("Press Q to continue", SMALL_FONT, WHITE, SCREEN, WIDTH // 2 - 100, HEIGHT - 100)
+        # ... existing success code ...
+        pass
     else:
-        # Load and display the game over background
         try:
             gameover_path = os.path.join(current_dir, "assets", "game_over.png")
             gameover_image = pygame.image.load(gameover_path).convert()
@@ -233,12 +229,30 @@ def outcome_screen(success):
             print(f"Error loading game over image: {e}")
             SCREEN.fill((50, 0, 0))  # Fallback to red background
 
-        # Display game over messages
-        draw_text("Game Over", FONT, RED, SCREEN, WIDTH // 2 - 100, HEIGHT // 2 - 50)
-        draw_text("Initial Success or Total Failure", FONT, WHITE, SCREEN, WIDTH // 2 - 250, HEIGHT // 2 + 50)
-        draw_text("Press Q to quit", SMALL_FONT, WHITE, SCREEN, WIDTH // 2 - 100, HEIGHT - 100)
+        # Larger, bolder Game Over text
+        big_bold_font = pygame.font.SysFont("consolas", 80, bold=True)
+        game_over_text = big_bold_font.render("Game Over", True, RED)
+        SCREEN.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2 - 180))
+
+        # Initial Success or Total Failure text
+        draw_text("Initial Success or Total Failure", FONT, WHITE, SCREEN, WIDTH // 2 - 250, HEIGHT // 2 - 50)
+
+        # Bold yellow points text
+        bold_points_font = pygame.font.SysFont("consolas", 40, bold=True)
+        points_text = f"Points: {points}"
+        rendered_points = bold_points_font.render(points_text, True, POINTS_COLOR)
+        points_y = HEIGHT - 100
+        SCREEN.blit(rendered_points, (WIDTH // 2 - rendered_points.get_width() // 2, points_y))
+
+        # Move "Press Q to quit" halfway between the above two
+        failure_y = HEIGHT // 2 - 50 + FONT.get_height()
+        halfway_y = failure_y + (points_y - failure_y) // 2
+        quit_text = SMALL_FONT.render("Press Q to quit", True, WHITE)
+        SCREEN.blit(quit_text, (WIDTH // 2 - quit_text.get_width() // 2, halfway_y))
 
 current_event = None
+game_start_ticks = None  # Track when the game starts
+points = 0               # Player's points
 
 # Main loop
 running = True
@@ -252,6 +266,8 @@ while running:
             if state == MENU:
                 if event.key == pygame.K_1:
                     state = TRAVEL
+                    game_start_ticks = pygame.time.get_ticks()  # Start timer
+                    points = 0  # Reset points
                 elif event.key == pygame.K_2:
                     running = False
                 elif event.key == pygame.K_3:
