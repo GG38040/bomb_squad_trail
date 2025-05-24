@@ -9,6 +9,9 @@ from game import GameEvents, IEDMiniGame
 pygame.init()
 game_events = GameEvents()
 
+# Add these near the top of the file after pygame.init()
+pygame.mixer.init()
+
 # Get current directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -142,16 +145,34 @@ def draw_text(text, font, color, surface, x, y):
         txt = font.render(line, True, color)
         surface.blit(txt, (x, y + i * font.get_height()))
 
+# Load music files
+try:
+    mission_start_music = os.path.join(current_dir, "assets", "mission_start_whimsical_grand.ogg")
+    pygame.mixer.music.load(mission_start_music)
+    pygame.mixer.music.set_volume(0.5)  # Set volume to 50%
+    print(f"Mission start music loaded successfully from: {mission_start_music}")
+    MUSIC_LOADED = True
+except pygame.error as e:
+    print(f"Error loading mission start music: {e}")
+    MUSIC_LOADED = False
+
 def menu_screen():
+    global current_music_playing
+    
+    # Only try to play music if it was successfully loaded
+    if MUSIC_LOADED and not pygame.mixer.music.get_busy():
+        try:
+            pygame.mixer.music.play(-1)  # -1 means loop indefinitely
+            print("Started playing menu music")
+        except pygame.error as e:
+            print(f"Error playing menu music: {e}")
+    
     # Clear screen first
     SCREEN.fill(BLACK)
     
     # Make sure menu_background exists and is loaded
     if menu_background:
         SCREEN.blit(menu_background, (0, 0))
-    
-    # Add debug print
-    # print(f"Current game state: {state}")
     
     # Make text more visible - adjust color if needed
     text_color = WHITE
@@ -181,41 +202,42 @@ def minigame_screen():
     if ied_game is None:
         ied_game = IEDMiniGame(WIDTH, HEIGHT, robot_battery)
 
-    # If the game is over, show the transition page or game over screen
+    # If the game is over, handle different scenarios
     if ied_game.game_over:
         if ied_game.success:
+            # Handle successful IED detection
             ied_game.draw_celebration_screen(SCREEN)
             pygame.display.flip()
             pygame.time.delay(2000)  # Pause for 2 seconds
-            state = TRAVEL  # Transition back to TRAVEL state after winning
-            travel_start_ticks = pygame.time.get_ticks()  # Reset travel timer here
-            ied_game = None  # Reset the minigame
+            state = TRAVEL
+            travel_start_ticks = pygame.time.get_ticks()
+            ied_game = None
         else:
+            # Handle failure
             if ied_game.lives > 0:
+                # Still has lives remaining
+                print(f"Life lost. Lives remaining: {ied_game.lives}")
                 ied_game.draw_transition_page(SCREEN)
                 pygame.display.flip()
-                pygame.time.delay(2000)  # Pause for 2 seconds
-                state = TRAVEL  # Reset to TRAVEL state after losing a life
-                travel_start_ticks = pygame.time.get_ticks()  # Reset travel timer here
-                ied_game.reset_game()  # Reset the minigame
+                pygame.time.delay(2000)
+                state = TRAVEL
+                travel_start_ticks = pygame.time.get_ticks()
+                ied_game.reset_game()
             else:
-                print("Player has no lives remaining. Transitioning to OUTCOME state.")
+                # No lives remaining - Game Over
+                print("No lives remaining. Game Over.")
                 success = False
                 state = OUTCOME
-                # Calculate points based on time survived
+                # Calculate final points
                 if game_start_ticks is not None:
                     elapsed_ms = pygame.time.get_ticks() - game_start_ticks
                     points = elapsed_ms // 1000
+                ied_game = None  # Clear the game instance
         return
 
-    # Update game state
+    # Update and draw the minigame
     ied_game.update()
-
-    # Draw game
     ied_game.draw(SCREEN)
-
-    # Display controls at the bottom of the screen
-    draw_text("Arrow keys to move", SMALL_FONT, WHITE, SCREEN, 180, HEIGHT - 40)
 
 def outcome_screen(success):
     if success:
@@ -268,6 +290,7 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if state == MENU:
                 if event.key == pygame.K_1:
+                    pygame.mixer.music.stop()  # Stop menu music
                     state = TRAVEL
                     travel_start_ticks = pygame.time.get_ticks()
                     game_start_ticks = pygame.time.get_ticks()  # Start timer
@@ -352,6 +375,8 @@ while running:
     pygame.display.flip()
     pygame.time.Clock().tick(60)  # Increased to 60 FPS for smoother movement
 
+pygame.mixer.music.stop()
+pygame.mixer.quit()
 pygame.quit()
 sys.exit()
 
