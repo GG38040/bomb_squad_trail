@@ -4,7 +4,7 @@ Retro style take on the Oregon Trail, following a Navy EOD team through a deploy
 # 🇺🇸 Bomb Squad Trail  
 _A Retro Game Honoring Navy EOD – Celebrating Memorial Day_
 
-![Bomb Squad Trail Banner](assets/memorial_day_banner.png) <!-- Use your own celebratory image here -->
+![Bomb Squad Trail Banner](assets/mission_start_background.png) <!-- Use your own celebratory image here -->
 
 ## 🎖️ In Tribute on Memorial Day
 
@@ -39,18 +39,18 @@ Meet the heroes, read their stories, and never forget:
 
 ### 🎥 Watch: Never Forgotten (Navy EOD Memorial Video)
 
-[![Navy EOD Memorial Video](https://img.youtube.com/vi/GRvZ9lHSL_0/0.jpg)](https://www.youtube.com/watch?v=GRvZ9lHSL_0)  
-> _Click to watch on YouTube or view below (if supported):_
+[![Navy EOD Memorial Video](https://img.youtube.com/vi/mRdFY11akDA/0.jpg)](https://www.youtube.com/watch?v=mRdFY11akDA)
+> _Click the image above to watch on YouTube_
 
 <details>
-  <summary>Click to expand video embed</summary>
+  <summary>Show embedded video (for markdown viewers that support HTML)</summary>
 
-  <a href="https://www.youtube.com/watch?v=GRvZ9lHSL_0" target="_blank">
-    <img src="https://img.youtube.com/vi/GRvZ9lHSL_0/0.jpg" alt="Never Forgotten Memorial Video">
-  </a>
   <br>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/GRvZ9lHSL_0" frameborder="0" allowfullscreen></iframe>
+
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/mRdFY11akDA?si=Rj65Ug-0KO_Zu6h-" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 </details>
+
 
 ---
 
