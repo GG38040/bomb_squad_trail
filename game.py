@@ -130,8 +130,20 @@ class IEDMiniGame:
 
     def check_ied_collision(self):
         """Check if player has found the IED"""
-        player_rect = pygame.Rect(self.player_pos[0], self.player_pos[1], 120, 120)
-        ied_rect = pygame.Rect(self.ied_pos[0], self.ied_pos[1], 40, 40)
+        # Define smaller collision boxes for more precise detection
+        player_rect = pygame.Rect(
+            self.player_pos[0] + 30,  # Offset to center of sprite
+            self.player_pos[1] + 30,  # Offset to center of sprite
+            60,  # Smaller collision box
+            60   # Smaller collision box
+        )
+        
+        ied_rect = pygame.Rect(
+            self.ied_pos[0],
+            self.ied_pos[1],
+            40,  # Match IED sprite size
+            40   # Match IED sprite size
+        )
         
         if player_rect.colliderect(ied_rect):
             print(f"IED found at {self.ied_pos}")

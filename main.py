@@ -238,8 +238,16 @@ def minigame_screen():
     # If the game is over, handle different scenarios
     if ied_game.game_over:
         if ied_game.success:
-            # Success handling...
-            pass
+            # Handle successful IED detection
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+            ied_game.draw_celebration_screen(SCREEN)
+            pygame.display.flip()
+            pygame.time.delay(2000)  # Show celebration screen for 2 seconds
+            state = TRAVEL  # Transition back to travel state
+            travel_start_ticks = pygame.time.get_ticks()  # Reset travel timer
+            ied_game = None  # Reset the game instance
+            change_music('travel')  # Start travel music
         else:
             if ied_game.lives > 0:
                 # Lost a life but still have lives remaining
