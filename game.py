@@ -67,6 +67,8 @@ class IEDMiniGame:
         self.gameover_image = self.load_sprite(os.path.join(sprite_path, "game_over.png"), (0, 0, 0), (self.width, self.height), scale_factor=1)
         self.life_sprite = self.load_sprite(os.path.join(sprite_path, "hair_gel.png"), (255, 255, 0), (30, 30))
         self.celebration_background = self.load_sprite(os.path.join(sprite_path, "celebration_background.png"), (0, 255, 0), (self.width, self.height))  # Add celebration background
+        # Add the new background
+        self.minigame_background = self.load_sprite(os.path.join(sprite_path, "IED_mini_background.png"), (30, 30, 60), (self.width, self.height), scale_factor=1)
 
     def load_sprite(self, sprite_path, fallback_color, size, scale_factor=1.3):
         """Load and scale a sprite with a fallback color"""
@@ -98,15 +100,15 @@ class IEDMiniGame:
                 self.draw_game_over_screen(screen)
             return
 
-        # Draw normal game screen
-        screen.fill((30, 30, 60))
-        screen.blit(self.ied_sprite, self.ied_pos)
+        # Draw minigame background instead of solid color
+        screen.blit(self.minigame_background, (0, 0))
 
         # Draw falling obstacles
         for obstacle in self.obstacles:
             screen.blit(obstacle['sprite'], obstacle['pos'])
 
-        # Draw player sprite
+        # Draw IED and player sprite
+        screen.blit(self.ied_sprite, self.ied_pos)
         screen.blit(self.robot_sprite, self.player_pos)
 
         # Draw UI elements
