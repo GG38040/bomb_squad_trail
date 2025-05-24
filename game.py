@@ -174,13 +174,17 @@ class IEDMiniGame:
 
     def lose_life(self):
         """Handle losing a life"""
-        if self.lives > 0:
-            self.lives -= 1
-            print(f"Lives remaining: {self.lives}")
-            self.game_over = True  # Trigger the transition page
-        else:
+        self.lives -= 1
+        print(f"Life lost. Lives remaining: {self.lives}")
+        self.game_over = True
+        
+        if self.lives <= 0:
             print("Game Over: No lives remaining")
-            self.game_over = True
+            self.success = False
+        else:
+            # Reset position but keep lives count
+            self.player_pos = [(self.width // 2) - 60, (self.height // 2) - 60]
+            self.battery = 100
 
     def reset_game(self):
         """Reset the game state for another attempt"""
@@ -272,12 +276,19 @@ class IEDMiniGame:
                 return
 
     def place_ied(self):
-        """Place IED at a random location on the screen"""
+        """Place IED at a random location on the screen with minimum distance from player"""
+        min_distance = 200  # Minimum pixel distance between IED and player
         while True:
             x = random.randint(0, self.width - 40)
             y = random.randint(0, self.height - 40)
-            if [x, y] != self.player_pos:  # Ensure IED is not placed on the player
+            
+            # Calculate distance between proposed IED position and player
+            distance = ((x - self.player_pos[0])**2 + (y - self.player_pos[1])**2)**0.5
+            
+            # Only place IED if it's far enough from player
+            if distance >= min_distance:
                 self.ied_pos = [x, y]
+                print(f"IED placed at ({x}, {y}), distance from player: {distance:.0f}")
                 break
 
     def spawn_obstacle(self):
