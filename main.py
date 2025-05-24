@@ -88,9 +88,12 @@ def draw_truck(surface):
 def travel_screen():
     global points
     
-    # Ensure traveling music is playing
-    if MUSIC_LOADED and not pygame.mixer.music.get_busy():
-        change_music('travel')
+    # Ensure traveling music is playing and other music is stopped
+    if MUSIC_LOADED:
+        if state == TRAVEL:  # Only play music if we're actually in travel state
+            current_track = pygame.mixer.music.get_pos()
+            if current_track == -1:  # No music playing
+                change_music('travel')
     
     # Draw background
     SCREEN.blit(background, (0, 0))
@@ -154,11 +157,14 @@ def draw_text(text, font, color, surface, x, y):
 try:
     mission_start_music = os.path.join(current_dir, "assets", "mission_start_whimsical_grand.ogg")
     traveling_music = os.path.join(current_dir, "assets", "traveling_western.ogg")
+    minigame_music = os.path.join(current_dir, "assets", "ied_minigame_dangerzone.ogg")
+    gameover_music = os.path.join(current_dir, "assets", "game_over_anchors_aweigh.ogg")
     
-    # Store music paths in a dictionary for easy access
     MUSIC_TRACKS = {
         'menu': mission_start_music,
-        'travel': traveling_music
+        'travel': traveling_music,
+        'minigame': minigame_music,
+        'gameover': gameover_music
     }
     
     # Initially load menu music
@@ -227,21 +233,24 @@ def minigame_screen():
 
     if ied_game is None:
         ied_game = IEDMiniGame(WIDTH, HEIGHT, robot_battery)
+        # No need to change music here since it's handled in state transition
 
     # If the game is over, handle different scenarios
     if ied_game.game_over:
         if ied_game.success:
-            # Handle successful IED detection
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
             ied_game.draw_celebration_screen(SCREEN)
             pygame.display.flip()
-            pygame.time.delay(2000)  # Pause for 2 seconds
+            pygame.time.delay(2000)
             state = TRAVEL
             travel_start_ticks = pygame.time.get_ticks()
             ied_game = None
+            change_music('travel')
         else:
-            # Handle failure
             if ied_game.lives > 0:
-                # Still has lives remaining
+                pygame.mixer.music.stop()
+                pygame.mixer.music.unload()
                 print(f"Life lost. Lives remaining: {ied_game.lives}")
                 ied_game.draw_transition_page(SCREEN)
                 pygame.display.flip()
@@ -249,16 +258,18 @@ def minigame_screen():
                 state = TRAVEL
                 travel_start_ticks = pygame.time.get_ticks()
                 ied_game.reset_game()
+                change_music('travel')
             else:
-                # No lives remaining - Game Over
+                pygame.mixer.music.stop()
+                pygame.mixer.music.unload()
+                change_music('gameover')
                 print("No lives remaining. Game Over.")
                 success = False
                 state = OUTCOME
-                # Calculate final points
                 if game_start_ticks is not None:
                     elapsed_ms = pygame.time.get_ticks() - game_start_ticks
                     points = elapsed_ms // 1000
-                ied_game = None  # Clear the game instance
+                ied_game = None
         return
 
     # Update and draw the minigame
@@ -267,9 +278,12 @@ def minigame_screen():
 
 def outcome_screen(success):
     if success:
-        # ... existing success code ...
         pass
     else:
+        # Ensure game over music is playing
+        if MUSIC_LOADED and not pygame.mixer.music.get_busy():
+            change_music('gameover')
+            
         try:
             gameover_path = os.path.join(current_dir, "assets", "game_over.png")
             gameover_image = pygame.image.load(gameover_path).convert()
@@ -359,7 +373,6 @@ while running:
                 if event.key == pygame.K_q:
                     running = False
             elif state == MINIGAME:
-                pygame.mixer.music.stop()  # Stop music during minigame
                 # Process events
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -390,8 +403,13 @@ while running:
         if travel_start_ticks is not None:
             elapsed_travel = (pygame.time.get_ticks() - travel_start_ticks) / 1000
             if elapsed_travel >= 3:
-                state = MINIGAME  # Transition to minigame
+                # Clean transition to minigame state and music
+                pygame.mixer.music.stop()
+                pygame.mixer.music.unload()
+                state = MINIGAME
                 travel_start_ticks = None  # Reset timer
+                # Start minigame music immediately when transitioning
+                change_music('minigame')
         travel_screen()
     elif state == MINIGAME:
         minigame_screen()
