@@ -65,7 +65,7 @@ class IEDMiniGame:
         self.tnt_sprite = self.load_sprite(os.path.join(sprite_path, "tnt_boom.png"), (255, 0, 0), (50, 50))
         self.doge_sprite = self.load_sprite(os.path.join(sprite_path, "doge_em.png"), (255, 255, 0), (50, 50))
         self.gameover_image = self.load_sprite(os.path.join(sprite_path, "game_over.png"), (0, 0, 0), (self.width, self.height), scale_factor=1)
-        self.life_sprite = self.load_sprite(os.path.join(sprite_path, "hair_gel.png"), (255, 255, 0), (30, 30))
+        self.life_sprite = self.load_sprite(os.path.join(sprite_path, "hair_gel.png"), (255, 255, 0), (60, 60))
         self.celebration_background = self.load_sprite(os.path.join(sprite_path, "celebration_background.png"), (0, 255, 0), (self.width, self.height))  # Add celebration background
         # Add the new background
         self.minigame_background = self.load_sprite(os.path.join(sprite_path, "IED_mini_background.png"), (30, 30, 60), (self.width, self.height), scale_factor=1)
@@ -223,11 +223,10 @@ class IEDMiniGame:
                    (self.width // 2 - life_lost_text.get_width() // 2, 
                     self.height // 2 - 100))
         
-        # Draw remaining lives with 4x scaling
-        scaled_life_sprite = pygame.transform.scale(self.life_sprite, (120, 120))  # 4x original size
+        # Draw remaining lives with larger sprites
         for i in range(self.lives):
-            screen.blit(scaled_life_sprite, 
-                       (self.width // 2 - (self.lives * 70) + (i * 140), 
+            screen.blit(self.life_sprite, 
+                       (self.width // 2 - (self.lives * 35) + (i * 70), 
                         self.height // 2 + 50))
 
     def draw_resource_bars(self, screen):
@@ -248,11 +247,11 @@ class IEDMiniGame:
         pygame.draw.circle(screen, (intensity, 0, 0), (self.width - 30, 30), 15)
 
     def draw_lives(self, screen):
-        """Draw the remaining lives on the screen"""
+        """Draw the remaining lives on the screen with larger sprites"""
         for i in range(self.lives):
             screen.blit(self.life_sprite, 
-                       (self.width - 40 - (i * 35), 
-                        self.height - 40))
+                       (self.width - 80 - (i * 70),  # Increased spacing between sprites
+                        self.height - 80))           # Moved lower to accommodate larger sprites
 
     def move_player(self, dx, dy):
         """Move the player and check for collisions"""

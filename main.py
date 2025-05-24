@@ -238,17 +238,11 @@ def minigame_screen():
     # If the game is over, handle different scenarios
     if ied_game.game_over:
         if ied_game.success:
-            pygame.mixer.music.stop()
-            pygame.mixer.music.unload()
-            ied_game.draw_celebration_screen(SCREEN)
-            pygame.display.flip()
-            pygame.time.delay(2000)
-            state = TRAVEL
-            travel_start_ticks = pygame.time.get_ticks()
-            ied_game = None
-            change_music('travel')
+            # Success handling...
+            pass
         else:
             if ied_game.lives > 0:
+                # Lost a life but still have lives remaining
                 pygame.mixer.music.stop()
                 pygame.mixer.music.unload()
                 print(f"Life lost. Lives remaining: {ied_game.lives}")
@@ -257,9 +251,15 @@ def minigame_screen():
                 pygame.time.delay(2000)
                 state = TRAVEL
                 travel_start_ticks = pygame.time.get_ticks()
-                ied_game.reset_game()
+                
+                # Create new IED game instance with current lives
+                current_lives = ied_game.lives  # Store current lives
+                ied_game = IEDMiniGame(WIDTH, HEIGHT, robot_battery)
+                ied_game.lives = current_lives  # Restore lives count
+                
                 change_music('travel')
             else:
+                # No lives remaining - Game Over
                 pygame.mixer.music.stop()
                 pygame.mixer.music.unload()
                 change_music('gameover')
