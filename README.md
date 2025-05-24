@@ -42,15 +42,7 @@ Meet the heroes, read their stories, and never forget:
 [![Navy EOD Memorial Video](https://img.youtube.com/vi/GRvZ9lHSL_0/0.jpg)](https://www.youtube.com/watch?v=GRvZ9lHSL_0)  
 > _Click to watch on YouTube or view below (if supported):_
 
-<details>
-  <summary>Click to expand video embed</summary>
-
-  <a href="https://www.youtube.com/watch?v=GRvZ9lHSL_0" target="_blank">
-    <img src="https://img.youtube.com/vi/GRvZ9lHSL_0/0.jpg" alt="Never Forgotten Memorial Video">
-  </a>
-  <br>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/GRvZ9lHSL_0" frameborder="0" allowfullscreen></iframe>
-</details>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mRdFY11akDA?si=Rj65Ug-0KO_Zu6h-" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ---
 
