@@ -39,10 +39,18 @@ Meet the heroes, read their stories, and never forget:
 
 ### 🎥 Watch: Never Forgotten (Navy EOD Memorial Video)
 
-[![Navy EOD Memorial Video](https://img.youtube.com/vi/GRvZ9lHSL_0/0.jpg)](https://www.youtube.com/watch?v=GRvZ9lHSL_0)  
-> _Click to watch on YouTube or view below (if supported):_
+[![Navy EOD Memorial Video](https://img.youtube.com/vi/mRdFY11akDA/0.jpg)](https://www.youtube.com/watch?v=mRdFY11akDA)
+> _Click the image above to watch on YouTube_
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mRdFY11akDA?si=Rj65Ug-0KO_Zu6h-" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<details>
+  <summary>Show embedded video (for markdown viewers that support HTML)</summary>
+
+  <br>
+
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/mRdFY11akDA?si=Rj65Ug-0KO_Zu6h-" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+</details>
+
 
 ---
 
