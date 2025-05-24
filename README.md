@@ -4,7 +4,7 @@ Retro style take on the Oregon Trail, following a Navy EOD team through a deploy
 # 🇺🇸 Bomb Squad Trail  
 _A Retro Game Honoring Navy EOD – Celebrating Memorial Day_
 
-![Bomb Squad Trail Banner](assets/memorial_day_banner.png) <!-- Use your own celebratory image here -->
+![Bomb Squad Trail Banner](assets/mission_start_background.png) <!-- Use your own celebratory image here -->
 
 ## 🎖️ In Tribute on Memorial Day
 
