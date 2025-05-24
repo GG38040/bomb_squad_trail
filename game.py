@@ -74,12 +74,10 @@ class GameEvents:
         return outcomes
 
 class IEDMiniGame:
-    def __init__(self, screen_width, screen_height, initial_morale=100, initial_battery=100, lives=3):
+    def __init__(self, screen_width, screen_height, initial_battery=100, lives=3):
         self.width = screen_width
         self.height = screen_height
         self.player_pos = [(screen_width // 2) - 60, (screen_height // 2) - 60]
-        self.current_sprite = "robot"  # Default to Talon robot
-        self.morale = initial_morale
         self.battery = initial_battery
         self.lives = lives
         self.game_over = False  # Initialize game_over to False
@@ -88,9 +86,8 @@ class IEDMiniGame:
         # Define movement speed
         self.MOVE_SPEED = 6  # Increased by 20% (originally 5)
 
-        # Define resource drain rates
-        self.BATTERY_DRAIN = 1  # Battery drain per update cycle when using the robot
-        self.MORALE_DRAIN = 1   # Morale drain per update cycle when using the bomb suit
+        # Define battery drain rate
+        self.BATTERY_DRAIN = 0.125  # Reduced battery drain rate by 50% (originally 0.25)
 
         # Initialize IED position
         self.ied_pos = None
@@ -106,12 +103,12 @@ class IEDMiniGame:
         # Load sprites
         sprite_path = os.path.join(os.path.dirname(__file__), "assets")
         self.robot_sprite = self.load_sprite(os.path.join(sprite_path, "talon_sprite.png"), (0, 0, 255), (120, 120))
-        self.bombsuit_sprite = self.load_sprite(os.path.join(sprite_path, "bombsuite_sprite.png"), (0, 255, 0), (120, 120))
         self.ied_sprite = self.load_sprite(os.path.join(sprite_path, "9v_battery.png"), (255, 0, 0), (40, 40))
-        self.life_sprite = self.load_sprite(os.path.join(sprite_path, "hair_gel.png"), (255, 255, 0), (30, 30))
         self.tnt_sprite = self.load_sprite(os.path.join(sprite_path, "tnt_boom.png"), (255, 0, 0), (50, 50))
         self.doge_sprite = self.load_sprite(os.path.join(sprite_path, "doge_em.png"), (255, 255, 0), (50, 50))
         self.gameover_image = self.load_sprite(os.path.join(sprite_path, "game_over.png"), (0, 0, 0), (self.width, self.height))
+        self.life_sprite = self.load_sprite(os.path.join(sprite_path, "hair_gel.png"), (255, 255, 0), (30, 30))  # Add life sprite
+        self.celebration_background = self.load_sprite(os.path.join(sprite_path, "celebration_background.png"), (0, 255, 0), (self.width, self.height))  # Add celebration background
 
     def load_sprite(self, sprite_path, fallback_color, size):
         try:
@@ -133,11 +130,28 @@ class IEDMiniGame:
             print("Switched to Talon Robot - Watch your battery!")
 
     def draw(self, screen):
-        """Draw the current sprite at the player's position"""
-        if self.current_sprite == "robot":
-            screen.blit(self.robot_sprite, self.player_pos)
-        else:
-            screen.blit(self.bombsuit_sprite, self.player_pos)
+        """Draw the current game state"""
+        if self.game_over:
+            if self.success:
+                self.draw_victory_screen(screen)
+            else:
+                self.draw_game_over_screen(screen)
+            return
+
+        # Draw normal game screen
+        screen.fill((30, 30, 60))
+        screen.blit(self.ied_sprite, self.ied_pos)
+
+        # Draw falling obstacles
+        for obstacle in self.obstacles:
+            screen.blit(obstacle['sprite'], obstacle['pos'])
+
+        # Draw player sprite
+        screen.blit(self.robot_sprite, self.player_pos)
+
+        # Draw UI elements
+        self.draw_resource_bars(screen)
+        self.draw_lives(screen)
 
     def check_collision_with_obstacles(self):
         """Check if player has collided with any falling obstacles"""
@@ -169,12 +183,6 @@ class IEDMiniGame:
         if self.game_over:
             return
 
-        # Example logic for game over condition
-        if self.morale <= 0 or self.battery <= 0:
-            print("Game Over: Resource depletion")
-            self.game_over = True
-            self.success = False
-
         # Check for IED collision first
         if self.check_ied_collision():
             return
@@ -185,7 +193,6 @@ class IEDMiniGame:
             
             # Remove obstacles that are off screen
             if obstacle['pos'][1] > self.height:
-                print(f"Obstacle removed: {obstacle}")
                 self.obstacles.remove(obstacle)
 
         # Spawn new obstacles
@@ -194,52 +201,36 @@ class IEDMiniGame:
 
         # Check for collisions
         if self.check_collision_with_obstacles():
+            self.lose_life()
             return
 
-        # Update resource drain
-        if self.current_sprite == "robot":
-            self.battery -= self.BATTERY_DRAIN * 0.125  # Reduce drain rate by 50%
-            if self.battery <= 0:
-                print("Game Over: Battery depleted")
-                self.game_over = True
-                self.success = False
+        # Update battery drain
+        self.battery -= self.BATTERY_DRAIN
+        if self.battery <= 0:
+            print("Game Over: Battery depleted")
+            self.lose_life()
+
+    def lose_life(self):
+        """Handle losing a life"""
+        if self.lives > 0:
+            self.lives -= 1
+            print(f"Lives remaining: {self.lives}")
+            self.game_over = True  # Trigger the transition page
         else:
-            self.morale -= self.MORALE_DRAIN * 0.25  # Keep morale drain rate as is
-            if self.morale <= 0:
-                print("Game Over: Morale depleted")
-                self.game_over = True
-                self.success = False
+            print("Game Over: No lives remaining")
+            self.game_over = True
 
-    def draw(self, screen):
-        if self.game_over:
-            if self.success:
-                # Victory screen - only show when IED is found
-                self.draw_victory_screen(screen)
-            else:
-                # Game over screen - show when collision with obstacles or resources depleted
-                self.draw_game_over_screen(screen)
-            return
-            
-        # Draw normal game screen
-        screen.fill((30, 30, 60))
-        
-        # Draw IED target
-        screen.blit(self.ied_sprite, self.ied_pos)
-        
-        # Draw falling obstacles
-        for obstacle in self.obstacles:
-            screen.blit(obstacle['sprite'], obstacle['pos'])
-        
-        # Draw player sprite
-        current_sprite = self.robot_sprite if self.current_sprite == "robot" else self.bombsuit_sprite
-        screen.blit(current_sprite, self.player_pos)
-        
-        # Draw UI elements
-        self.draw_resource_bars(screen)
-        self.draw_lives(screen)
+    def reset_game(self):
+        """Reset the game state for another attempt"""
+        self.battery = 100  # Reset battery to full
+        self.player_pos = [(self.width // 2) - 60, (self.height // 2) - 60]  # Reset player position
+        self.obstacles = []  # Clear all obstacles
+        self.place_ied()  # Place a new IED
+        self.game_over = False  # Reset game_over flag
+        self.success = False  # Reset success flag
 
     def draw_game_over_screen(self, screen):
-        """Draw game over screen with text"""
+        """Draw game over screen with lives remaining"""
         # Draw the game over background image
         screen.blit(self.gameover_image, (0, 0))
         
@@ -249,20 +240,38 @@ class IEDMiniGame:
                    (self.width//2 - game_over_text.get_width()//2, 
                     self.height//2 - game_over_text.get_height()))
         
-        # Draw motto text
-        motto_text = self.game_over_small_font.render("Initial Success or Total Failure", True, (255, 255, 255))
-        screen.blit(motto_text, 
-                   (self.width//2 - motto_text.get_width()//2, 
-                    self.height//2 + motto_text.get_height()))
+        # Draw remaining lives
+        for i in range(self.lives):
+            screen.blit(self.life_sprite, 
+                       (self.width//2 - (self.lives * 20) + (i * 40), 
+                        self.height//2 + 50))
+
+    def draw_transition_page(self, screen):
+        """Draw the transition page after losing a life"""
+        # Draw the game over background image
+        screen.blit(self.gameover_image, (0, 0))
+        
+        # Draw "Life Lost" text
+        life_lost_text = self.game_over_font.render("Life Lost", True, (255, 0, 0))
+        screen.blit(life_lost_text, 
+                   (self.width // 2 - life_lost_text.get_width() // 2, 
+                    self.height // 2 - 100))
+        
+        # Draw remaining lives
+        for i in range(self.lives):
+            screen.blit(self.life_sprite, 
+                       (self.width // 2 - (self.lives * 20) + (i * 40), 
+                        self.height // 2 + 50))
 
     def draw_resource_bars(self, screen):
-        # Battery bar (blue)
-        pygame.draw.rect(screen, (50, 50, 50), (20, 20, 200, 20))
-        pygame.draw.rect(screen, (0, 0, 255), (20, 20, self.battery * 2, 20))
-        
-        # Morale bar (green)
-        pygame.draw.rect(screen, (50, 50, 50), (20, 50, 200, 20))
-        pygame.draw.rect(screen, (0, 255, 0), (20, 50, self.morale * 2, 20))
+        """Draw the battery level on the screen"""
+        # Draw battery bar
+        pygame.draw.rect(screen, (255, 0, 0), (20, 50, 200, 20))  # Red background for battery bar
+        pygame.draw.rect(screen, (0, 255, 0), (20, 50, self.battery * 2, 20))  # Green foreground for battery level
+
+        # Add battery label
+        battery_text = self.game_over_small_font.render(f"Battery: {self.battery:.0f}%", True, (255, 255, 255))
+        screen.blit(battery_text, (20, 25))
 
     def draw_proximity_indicator(self, screen):
         distance = ((self.player_pos[0] - self.ied_pos[0])**2 + 
@@ -272,6 +281,7 @@ class IEDMiniGame:
         pygame.draw.circle(screen, (intensity, 0, 0), (self.width - 30, 30), 15)
 
     def draw_lives(self, screen):
+        """Draw the remaining lives on the screen"""
         for i in range(self.lives):
             screen.blit(self.life_sprite, 
                        (self.width - 40 - (i * 35), 
@@ -332,3 +342,20 @@ class IEDMiniGame:
         """Check if two positions are close enough to collide"""
         return (abs(pos1[0] - pos2[0]) < 40 and 
                 abs(pos1[1] - pos2[1]) < 40)
+
+    def draw_celebration_screen(self, screen):
+        """Draw the celebration screen when the player wins"""
+        # Draw the celebration background image
+        screen.blit(self.celebration_background, (0, 0))
+        
+        # Draw "Mission Success" text
+        success_text = self.game_over_font.render("Mission Success!", True, (0, 255, 0))
+        screen.blit(success_text, 
+                   (self.width // 2 - success_text.get_width() // 2, 
+                    self.height // 2 - 50))
+        
+        # Draw "Returning to Travel" text
+        return_text = self.game_over_small_font.render("Returning to Travel...", True, (255, 255, 255))
+        screen.blit(return_text, 
+                   (self.width // 2 - return_text.get_width() // 2, 
+                    self.height // 2 + 50))
