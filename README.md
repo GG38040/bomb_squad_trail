@@ -1,3 +1,11 @@
+## 🎬 Gameplay Trailer
+
+Experience the action of Bomb Squad Trail!  
+Watch the official gameplay trailer below:
+
+[![Watch the Bomb Squad Trail Gameplay Trailer](https://img.youtube.com/vi/EShAkqdaRIw/maxresdefault.jpg)](https://youtu.be/EShAkqdaRIw)
+
+
 # bomb_squad_trail
 Retro style take on the Oregon Trail, following a Navy EOD team through a deployment
 
