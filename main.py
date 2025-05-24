@@ -149,11 +149,18 @@ def menu_screen():
     draw_text("5. TBD", SMALL_FONT, text_color, SCREEN, WIDTH//2 - 100, HEIGHT//2 + 160)
 
 def event_screen(event):
-    SCREEN.fill(NAVY)
-    draw_text("Random Event!", FONT, WHITE, SCREEN, 280, 120)
-    draw_text(event.description, SMALL_FONT, WHITE, SCREEN, 180, 200)  # Use event.description
-    draw_text(f"1. {event.safe_choice}", SMALL_FONT, WHITE, SCREEN, 180, 280)  # Use event.safe_choice
-    draw_text(f"2. {event.risk_choice}", SMALL_FONT, WHITE, SCREEN, 180, 320)  # Use event.risk_choice
+    """Display the event screen"""
+    SCREEN.fill((0, 0, 0))  # Clear the screen with a black background
+
+    # Access the description attribute of the Event object
+    draw_text(event.description, SMALL_FONT, WHITE, SCREEN, 180, 200)
+
+    # Display safe and risky choices
+    draw_text("1. " + event.safe_choice, SMALL_FONT, WHITE, SCREEN, 180, 300)
+    # Comment out risky choice display
+    # draw_text("2. " + event.risk_choice, SMALL_FONT, WHITE, SCREEN, 180, 350)
+
+    pygame.display.flip()
 
 def minigame_screen():
     global ied_game, state, robot_battery, success
@@ -197,8 +204,16 @@ def outcome_screen(success):
         try:
             celebration_path = os.path.join(current_dir, "assets", "celebration_background.png")
             celebration_image = pygame.image.load(celebration_path).convert()
-            celebration_image = pygame.transform.scale(celebration_image, (WIDTH, HEIGHT))
-            SCREEN.blit(celebration_image, (0, 0))
+            
+            # Scale the image to 75% of the screen size
+            scaled_width = int(WIDTH * 0.75)
+            scaled_height = int(HEIGHT * 0.75)
+            celebration_image = pygame.transform.scale(celebration_image, (scaled_width, scaled_height))
+            
+            # Center the scaled image on the screen
+            x_offset = (WIDTH - scaled_width) // 2
+            y_offset = (HEIGHT - scaled_height) // 2
+            SCREEN.blit(celebration_image, (x_offset, y_offset))
         except pygame.error as e:
             print(f"Error loading celebration image: {e}")
             SCREEN.fill((0, 50, 0))  # Fallback to dark green background
@@ -263,20 +278,21 @@ while running:
                         fuel = max(fuel + outcomes['fuel'], 0)
                         robot_battery = max(min(robot_battery + outcomes['robot_battery'], 100), 0)
                         state = TRAVEL
-                elif event.key == pygame.K_2:
-                    # Risky choice - Initialize minigame
-                    outcomes = game_events.handle_choice(current_event, False)
-                    if current_event.description.startswith("IED detected"):
-                        state = MINIGAME  # Transition to minigame instead of TRAVEL
-                    else:
-                        morale = max(morale + outcomes['morale'], 0)
-                        fuel = max(fuel + outcomes['fuel'], 0)
-                        robot_battery = max(min(robot_battery + outcomes['robot_battery'], 100), 0)
-                        if morale <= 0:
-                            success = False
-                            state = OUTCOME
-                        else:
-                            state = TRAVEL
+                # Comment out risky choice logic
+                # elif event.key == pygame.K_2:
+                #     # Risky choice - Initialize minigame
+                #     outcomes = game_events.handle_choice(current_event, False)
+                #     if current_event.description.startswith("IED detected"):
+                #         state = MINIGAME  # Transition to minigame instead of TRAVEL
+                #     else:
+                #         morale = max(morale + outcomes['morale'], 0)
+                #         fuel = max(fuel + outcomes['fuel'], 0)
+                #         robot_battery = max(min(robot_battery + outcomes['robot_battery'], 100), 0)
+                #         if morale <= 0:
+                #             success = False
+                #             state = OUTCOME
+                #         else:
+                #             state = TRAVEL
             elif state == OUTCOME:
                 if event.key == pygame.K_q:
                     running = False
