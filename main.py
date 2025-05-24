@@ -156,10 +156,31 @@ def event_screen(event):
     draw_text(f"2. {event.risk_choice}", SMALL_FONT, WHITE, SCREEN, 180, 320)  # Use event.risk_choice
 
 def minigame_screen():
-    global ied_game, state, morale, robot_battery, success
+    global ied_game, state, robot_battery, success
 
     if ied_game is None:
-        ied_game = IEDMiniGame(WIDTH, HEIGHT, morale, robot_battery)
+        ied_game = IEDMiniGame(WIDTH, HEIGHT, robot_battery)
+
+    # If the game is over, show the transition page or game over screen
+    if ied_game.game_over:
+        if ied_game.success:
+            ied_game.draw_celebration_screen(SCREEN)
+            pygame.display.flip()
+            pygame.time.delay(2000)  # Pause for 2 seconds
+            state = TRAVEL  # Transition back to TRAVEL state after winning
+            ied_game = None  # Reset the minigame
+        else:
+            if ied_game.lives > 0:
+                ied_game.draw_transition_page(SCREEN)
+                pygame.display.flip()
+                pygame.time.delay(2000)  # Pause for 2 seconds
+                state = TRAVEL  # Reset to TRAVEL state after losing a life
+                ied_game.reset_game()  # Reset the minigame
+            else:
+                print("Player has no lives remaining. Transitioning to OUTCOME state.")
+                success = False  # Explicitly set success to False
+                state = OUTCOME  # Transition to OUTCOME state if no lives remain
+        return
 
     # Update game state
     ied_game.update()
@@ -168,28 +189,26 @@ def minigame_screen():
     ied_game.draw(SCREEN)
 
     # Display controls at the bottom of the screen
-    draw_text("Arrow keys to move | SPACE to switch between Talon and Bomb Suit", 
-              SMALL_FONT, WHITE, SCREEN, 180, HEIGHT - 40)
-
-    if ied_game.game_over:
-        if ied_game.success:
-            morale = ied_game.morale
-            robot_battery = ied_game.battery
-            success = True
-        else:
-            success = False
-        state = OUTCOME
-        ied_game = None  # Reset for next time
+    draw_text("Arrow keys to move", SMALL_FONT, WHITE, SCREEN, 180, HEIGHT - 40)
 
 def outcome_screen(success):
     if success:
-        # Victory screen for completing IED minigame
-        SCREEN.fill((0, 50, 0))  # Dark green background
-        draw_text("HOYAHHH NAVY EOD!!!", FONT, WHITE, SCREEN, WIDTH//2 - 200, HEIGHT//2 - 50)
-        draw_text("LLTB", FONT, WHITE, SCREEN, WIDTH//2 - 50, HEIGHT//2 + 50)
-        draw_text("Press Q to continue", SMALL_FONT, WHITE, SCREEN, WIDTH//2 - 100, HEIGHT - 100)
+        # Load and display the celebration background
+        try:
+            celebration_path = os.path.join(current_dir, "assets", "celebration_background.png")
+            celebration_image = pygame.image.load(celebration_path).convert()
+            celebration_image = pygame.transform.scale(celebration_image, (WIDTH, HEIGHT))
+            SCREEN.blit(celebration_image, (0, 0))
+        except pygame.error as e:
+            print(f"Error loading celebration image: {e}")
+            SCREEN.fill((0, 50, 0))  # Fallback to dark green background
+
+        # Display success messages
+        draw_text("HOYAHHH NAVY EOD!!!", FONT, WHITE, SCREEN, WIDTH // 2 - 200, HEIGHT // 2 - 50)
+        draw_text("LLTB", FONT, WHITE, SCREEN, WIDTH // 2 - 50, HEIGHT // 2 + 50)
+        draw_text("Press Q to continue", SMALL_FONT, WHITE, SCREEN, WIDTH // 2 - 100, HEIGHT - 100)
     else:
-        # Load and display game over background
+        # Load and display the game over background
         try:
             gameover_path = os.path.join(current_dir, "assets", "game_over.png")
             gameover_image = pygame.image.load(gameover_path).convert()
@@ -198,10 +217,11 @@ def outcome_screen(success):
         except pygame.error as e:
             print(f"Error loading game over image: {e}")
             SCREEN.fill((50, 0, 0))  # Fallback to red background
-            
-        draw_text("Game Over", FONT, RED, SCREEN, WIDTH//2 - 100, HEIGHT//2 - 50)
-        draw_text("Initial Success or Total Failure", FONT, WHITE, SCREEN, WIDTH//2 - 250, HEIGHT//2 + 50)
-        draw_text("Press Q to quit", SMALL_FONT, WHITE, SCREEN, WIDTH//2 - 100, HEIGHT - 100)
+
+        # Display game over messages
+        draw_text("Game Over", FONT, RED, SCREEN, WIDTH // 2 - 100, HEIGHT // 2 - 50)
+        draw_text("Initial Success or Total Failure", FONT, WHITE, SCREEN, WIDTH // 2 - 250, HEIGHT // 2 + 50)
+        draw_text("Press Q to quit", SMALL_FONT, WHITE, SCREEN, WIDTH // 2 - 100, HEIGHT - 100)
 
 current_event = None
 
