@@ -69,6 +69,7 @@ class IEDMiniGame:
         self.celebration_background = self.load_sprite(os.path.join(sprite_path, "celebration_background.png"), (0, 255, 0), (self.width, self.height))  # Add celebration background
         # Add the new background
         self.minigame_background = self.load_sprite(os.path.join(sprite_path, "IED_mini_background.png"), (30, 30, 60), (self.width, self.height), scale_factor=1)
+        print(f"IED Minigame started with {self.lives} lives")
 
     def load_sprite(self, sprite_path, fallback_color, size, scale_factor=1.3):
         """Load and scale a sprite with a fallback color"""
@@ -186,17 +187,26 @@ class IEDMiniGame:
 
     def lose_life(self):
         """Handle losing a life"""
-        self.lives -= 1
-        print(f"Life lost. Lives remaining: {self.lives}")
+        self.lives -= 1  # Decrement lives first
+        print(f"Life lost in minigame. Lives remaining: {self.lives}")
         self.game_over = True
+        self.success = False
+
+    def draw_game_over_screen(self, screen):
+        """Draw game over screen with final score"""
+        screen.blit(self.gameover_image, (0, 0))
         
-        if self.lives <= 0:
-            print("Game Over: No lives remaining")
-            self.success = False
-        else:
-            # Reset position but keep lives count
-            self.player_pos = [(self.width // 2) - 60, (self.height // 2) - 60]
-            self.battery = 100
+        # Draw "Game Over" text
+        game_over_text = self.game_over_font.render("Game Over", True, (255, 0, 0))
+        screen.blit(game_over_text, 
+                   (self.width//2 - game_over_text.get_width()//2, 
+                    self.height//2 - 100))
+        
+        # Draw final points
+        points_text = self.game_over_font.render(f"Final Score: {self.points}", True, (255, 255, 0))
+        screen.blit(points_text,
+                   (self.width//2 - points_text.get_width()//2,
+                    self.height//2))
 
     def reset_game(self):
         """Reset the game state for another attempt"""
@@ -207,26 +217,8 @@ class IEDMiniGame:
         self.game_over = False  # Reset game_over flag
         self.success = False  # Reset success flag
 
-    def draw_game_over_screen(self, screen):
-        """Draw game over screen with lives remaining"""
-        # Draw the game over background image
-        screen.blit(self.gameover_image, (0, 0))
-        
-        # Draw "Game Over" text
-        game_over_text = self.game_over_font.render("Game Over", True, (255, 0, 0))
-        screen.blit(game_over_text, 
-                   (self.width//2 - game_over_text.get_width()//2, 
-                    self.height//2 - game_over_text.get_height()))
-        
-        # Draw remaining lives
-        for i in range(self.lives):
-            screen.blit(self.life_sprite, 
-                       (self.width//2 - (self.lives * 20) + (i * 40), 
-                        self.height//2 + 50))
-
     def draw_transition_page(self, screen):
         """Draw the transition page after losing a life"""
-        # Draw the game over background image
         screen.blit(self.gameover_image, (0, 0))
         
         # Draw "Life Lost" text
@@ -235,10 +227,16 @@ class IEDMiniGame:
                    (self.width // 2 - life_lost_text.get_width() // 2, 
                     self.height // 2 - 100))
         
-        # Draw remaining lives with larger sprites
-        for i in range(self.lives):
+        # Draw remaining lives centered - show current lives after loss
+        remaining_lives = max(0, self.lives)  # Ensure non-negative
+        total_width = remaining_lives * 70  # Width of all life sprites together
+        start_x = (self.width - total_width) // 2  # Center point
+        
+        print(f"Drawing transition page with {remaining_lives} lives remaining")
+        
+        for i in range(remaining_lives):
             screen.blit(self.life_sprite, 
-                       (self.width // 2 - (self.lives * 35) + (i * 70), 
+                       (start_x + (i * 70), 
                         self.height // 2 + 50))
 
     def draw_resource_bars(self, screen):
@@ -259,11 +257,11 @@ class IEDMiniGame:
         pygame.draw.circle(screen, (intensity, 0, 0), (self.width - 30, 30), 15)
 
     def draw_lives(self, screen):
-        """Draw the remaining lives on the screen with larger sprites"""
-        for i in range(self.lives):
+        """Draw the remaining lives during gameplay"""
+        for i in range(max(0, self.lives)):
             screen.blit(self.life_sprite, 
-                       (self.width - 80 - (i * 70),  # Increased spacing between sprites
-                        self.height - 80))           # Moved lower to accommodate larger sprites
+                       (self.width - 80 - (i * 70),  # Spacing between sprites
+                        20))  # Distance from top
 
     def move_player(self, dx, dy):
         """Move the player and check for collisions"""
