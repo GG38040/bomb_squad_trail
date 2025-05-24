@@ -95,7 +95,7 @@ def travel_screen():
     draw_text("Traveling to next mission site...", FONT, WHITE, SCREEN, 150, 120)
     draw_text(f"Fuel: {fuel} | Robot Battery: {robot_battery} | Morale: {morale}", 
               SMALL_FONT, WHITE, SCREEN, 180, 200)
-    draw_text("Press SPACE to continue", SMALL_FONT, WHITE, SCREEN, 250, 400)
+    # draw_text("Press SPACE to continue", SMALL_FONT, WHITE, SCREEN, 250, 400)
     
     # --- Real-time points update ---
     if game_start_ticks is not None:
@@ -176,7 +176,7 @@ def event_screen(event):
     pygame.display.flip()
 
 def minigame_screen():
-    global ied_game, state, robot_battery, success, points
+    global ied_game, state, robot_battery, success, points, travel_start_ticks
 
     if ied_game is None:
         ied_game = IEDMiniGame(WIDTH, HEIGHT, robot_battery)
@@ -188,6 +188,7 @@ def minigame_screen():
             pygame.display.flip()
             pygame.time.delay(2000)  # Pause for 2 seconds
             state = TRAVEL  # Transition back to TRAVEL state after winning
+            travel_start_ticks = pygame.time.get_ticks()  # Reset travel timer here
             ied_game = None  # Reset the minigame
         else:
             if ied_game.lives > 0:
@@ -195,15 +196,16 @@ def minigame_screen():
                 pygame.display.flip()
                 pygame.time.delay(2000)  # Pause for 2 seconds
                 state = TRAVEL  # Reset to TRAVEL state after losing a life
+                travel_start_ticks = pygame.time.get_ticks()  # Reset travel timer here
                 ied_game.reset_game()  # Reset the minigame
             else:
                 print("Player has no lives remaining. Transitioning to OUTCOME state.")
-                success = False  # Explicitly set success to False
-                state = OUTCOME  # Transition to OUTCOME state if no lives remain
+                success = False
+                state = OUTCOME
                 # Calculate points based on time survived
                 if game_start_ticks is not None:
                     elapsed_ms = pygame.time.get_ticks() - game_start_ticks
-                    points = elapsed_ms // 1000  # 1 point per second
+                    points = elapsed_ms // 1000
         return
 
     # Update game state
@@ -253,6 +255,7 @@ def outcome_screen(success):
 current_event = None
 game_start_ticks = None  # Track when the game starts
 points = 0               # Player's points
+travel_start_ticks = None
 
 # Main loop
 running = True
@@ -266,7 +269,9 @@ while running:
             if state == MENU:
                 if event.key == pygame.K_1:
                     state = TRAVEL
+                    travel_start_ticks = pygame.time.get_ticks()
                     game_start_ticks = pygame.time.get_ticks()  # Start timer
+                    travel_start_ticks = pygame.time.get_ticks()  # Start travel timer
                     points = 0  # Reset points
                 elif event.key == pygame.K_2:
                     running = False
@@ -276,13 +281,6 @@ while running:
                     pass  # TBD - Placeholder for future feature
                 elif event.key == pygame.K_5:
                     pass  # TBD - Placeholder for future feature
-            elif state == TRAVEL:
-                if event.key == pygame.K_SPACE:
-                    if random.randint(1, 3) == 1:
-                        current_event = game_events.get_random_event()  # Get Event object instead of string
-                        state = EVENT
-                    else:
-                        pass
             elif state == EVENT:
                 if event.key == pygame.K_1:
                     # Safe choice - Initialize minigame
@@ -334,14 +332,18 @@ while running:
 
                 # Update and draw the minigame
                 minigame_screen()
-
+    
     # Draw current screen
     if state == MENU:
         menu_screen()
     elif state == TRAVEL:
+        # Check for automatic transition after 3 seconds
+        if travel_start_ticks is not None:
+            elapsed_travel = (pygame.time.get_ticks() - travel_start_ticks) / 1000
+            if elapsed_travel >= 3:
+                state = MINIGAME  # Transition to minigame
+                travel_start_ticks = None  # Reset timer
         travel_screen()
-    elif state == EVENT:
-        event_screen(current_event)
     elif state == MINIGAME:
         minigame_screen()
     elif state == OUTCOME:
