@@ -87,10 +87,15 @@ def draw_truck(surface):
 # Modify your travel_screen function
 def travel_screen():
     global points
-    # Draw background instead of filling with BLACK
+    
+    # Ensure traveling music is playing
+    if MUSIC_LOADED and not pygame.mixer.music.get_busy():
+        change_music('travel')
+    
+    # Draw background
     SCREEN.blit(background, (0, 0))
     
-    # Update and draw truck first
+    # Update and draw truck
     update_truck()
     draw_truck(SCREEN)
     
@@ -148,13 +153,34 @@ def draw_text(text, font, color, surface, x, y):
 # Load music files
 try:
     mission_start_music = os.path.join(current_dir, "assets", "mission_start_whimsical_grand.ogg")
-    pygame.mixer.music.load(mission_start_music)
-    pygame.mixer.music.set_volume(0.5)  # Set volume to 50%
-    print(f"Mission start music loaded successfully from: {mission_start_music}")
+    traveling_music = os.path.join(current_dir, "assets", "traveling_western.ogg")
+    
+    # Store music paths in a dictionary for easy access
+    MUSIC_TRACKS = {
+        'menu': mission_start_music,
+        'travel': traveling_music
+    }
+    
+    # Initially load menu music
+    pygame.mixer.music.load(MUSIC_TRACKS['menu'])
+    pygame.mixer.music.set_volume(0.5)
+    print("Music tracks loaded successfully")
     MUSIC_LOADED = True
 except pygame.error as e:
-    print(f"Error loading mission start music: {e}")
+    print(f"Error loading music: {e}")
     MUSIC_LOADED = False
+
+def change_music(track_key):
+    """Switch to a different music track"""
+    if MUSIC_LOADED:
+        try:
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+            pygame.mixer.music.load(MUSIC_TRACKS[track_key])
+            pygame.mixer.music.play(-1)  # Loop indefinitely
+            print(f"Changed music to {track_key} track")
+        except pygame.error as e:
+            print(f"Error changing music: {e}")
 
 def menu_screen():
     global current_music_playing
@@ -290,12 +316,11 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if state == MENU:
                 if event.key == pygame.K_1:
-                    pygame.mixer.music.stop()  # Stop menu music
+                    change_music('travel')  # Start travel music
                     state = TRAVEL
                     travel_start_ticks = pygame.time.get_ticks()
-                    game_start_ticks = pygame.time.get_ticks()  # Start timer
-                    travel_start_ticks = pygame.time.get_ticks()  # Start travel timer
-                    points = 0  # Reset points
+                    game_start_ticks = pygame.time.get_ticks()
+                    points = 0
                 elif event.key == pygame.K_2:
                     running = False
                 elif event.key == pygame.K_3:
@@ -334,6 +359,7 @@ while running:
                 if event.key == pygame.K_q:
                     running = False
             elif state == MINIGAME:
+                pygame.mixer.music.stop()  # Stop music during minigame
                 # Process events
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
