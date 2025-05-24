@@ -80,14 +80,14 @@ class IEDMiniGame:
         self.player_pos = [(screen_width // 2) - 60, (screen_height // 2) - 60]
         self.battery = initial_battery
         self.lives = lives
-        self.game_over = False  # Initialize game_over to False
-        self.success = False  # Initialize success to False
+        self.game_over = False
+        self.success = False
 
         # Define movement speed
-        self.MOVE_SPEED = 6  # Increased by 20% (originally 5)
+        self.MOVE_SPEED = 6  # Adjust this value as needed
 
         # Define battery drain rate
-        self.BATTERY_DRAIN = 0.125  # Reduced battery drain rate by 50% (originally 0.25)
+        self.BATTERY_DRAIN = 0.25  # Adjust this value as needed
 
         # Initialize IED position
         self.ied_pos = None
@@ -96,24 +96,26 @@ class IEDMiniGame:
         # Initialize obstacles list
         self.obstacles = []  # List to store falling obstacles
 
-        # Fonts for game over and victory screens
+        # Load fonts
         self.game_over_font = pygame.font.SysFont("consolas", 48)
-        self.game_over_small_font = pygame.font.SysFont("consolas", 24)
+        self.game_over_small_font = pygame.font.SysFont("consolas", 24)  # Define small font for resource bars
 
-        # Load sprites
+        # Load sprites with 30% scaling
         sprite_path = os.path.join(os.path.dirname(__file__), "assets")
         self.robot_sprite = self.load_sprite(os.path.join(sprite_path, "talon_sprite.png"), (0, 0, 255), (120, 120))
         self.ied_sprite = self.load_sprite(os.path.join(sprite_path, "9v_battery.png"), (255, 0, 0), (40, 40))
         self.tnt_sprite = self.load_sprite(os.path.join(sprite_path, "tnt_boom.png"), (255, 0, 0), (50, 50))
         self.doge_sprite = self.load_sprite(os.path.join(sprite_path, "doge_em.png"), (255, 255, 0), (50, 50))
-        self.gameover_image = self.load_sprite(os.path.join(sprite_path, "game_over.png"), (0, 0, 0), (self.width, self.height))
-        self.life_sprite = self.load_sprite(os.path.join(sprite_path, "hair_gel.png"), (255, 255, 0), (30, 30))  # Add life sprite
+        self.gameover_image = self.load_sprite(os.path.join(sprite_path, "game_over.png"), (0, 0, 0), (self.width, self.height), scale_factor=1)
+        self.life_sprite = self.load_sprite(os.path.join(sprite_path, "hair_gel.png"), (255, 255, 0), (30, 30))
         self.celebration_background = self.load_sprite(os.path.join(sprite_path, "celebration_background.png"), (0, 255, 0), (self.width, self.height))  # Add celebration background
 
-    def load_sprite(self, sprite_path, fallback_color, size):
+    def load_sprite(self, sprite_path, fallback_color, size, scale_factor=1.3):
+        """Load and scale a sprite with a fallback color"""
         try:
             sprite = pygame.image.load(sprite_path).convert_alpha()
-            return pygame.transform.scale(sprite, size)
+            scaled_size = (int(size[0] * scale_factor), int(size[1] * scale_factor))
+            return pygame.transform.scale(sprite, scaled_size)
         except FileNotFoundError:
             print(f"Warning: Missing sprite file at {sprite_path}")
             sprite = pygame.Surface(size)
@@ -257,10 +259,11 @@ class IEDMiniGame:
                    (self.width // 2 - life_lost_text.get_width() // 2, 
                     self.height // 2 - 100))
         
-        # Draw remaining lives
+        # Draw remaining lives with 4x scaling
+        scaled_life_sprite = pygame.transform.scale(self.life_sprite, (120, 120))  # 4x original size
         for i in range(self.lives):
-            screen.blit(self.life_sprite, 
-                       (self.width // 2 - (self.lives * 20) + (i * 40), 
+            screen.blit(scaled_life_sprite, 
+                       (self.width // 2 - (self.lives * 70) + (i * 140), 
                         self.height // 2 + 50))
 
     def draw_resource_bars(self, screen):
