@@ -42,10 +42,10 @@ class IEDMiniGame:
         self.success = False
 
         # Define movement speed
-        self.MOVE_SPEED = 6  # Adjust this value as needed
+        self.MOVE_SPEED = 12  # Adjust this value as needed
 
         # Define battery drain rate
-        self.BATTERY_DRAIN = 0.25  # Adjust this value as needed
+        self.BATTERY_DRAIN = 0.125  # Adjust this value as needed
 
         # Initialize IED position
         self.ied_pos = None
@@ -306,9 +306,14 @@ class IEDMiniGame:
 
     def draw_celebration_screen(self, screen):
         """Draw the celebration screen when the player wins"""
-        # Draw the celebration background image
-        screen.blit(self.celebration_background, (0, 0))
-        
+        # Scale the celebration background to 75% of the screen size
+        scaled_width = int(self.width * 1.00)
+        scaled_height = int(self.height * 1.00)
+        scaled_bg = pygame.transform.scale(self.celebration_background, (scaled_width, scaled_height))
+        x_offset = (self.width - scaled_width) // 2
+        y_offset = (self.height - scaled_height) // 2
+        screen.blit(scaled_bg, (x_offset, y_offset))
+
         # Draw "Mission Success" text
         success_text = self.game_over_font.render("Mission Success!", True, (0, 255, 0))
         screen.blit(success_text, 
