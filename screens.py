@@ -18,7 +18,28 @@ class MenuScreen(ScreenBase):
             "mission_start_background.png", 
             (self.width, self.height)
         )
+        self.code_input = ""
+        self.code_font = pygame.font.SysFont("consolas", 24)
+        self.input_active = False
+        self.input_rect = pygame.Rect(self.width - 150, 20, 130, 32)
         
+    def handle_input(self, event):
+        """Handle code input"""
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.input_rect.collidepoint(event.pos):
+                self.input_active = True
+            else:
+                self.input_active = False
+        
+        if event.type == pygame.KEYDOWN and self.input_active:
+            if event.key == pygame.K_RETURN:
+                self.input_active = False
+            elif event.key == pygame.K_BACKSPACE:
+                self.code_input = self.code_input[:-1]
+            else:
+                if len(self.code_input) < 4 and event.unicode.isnumeric():
+                    self.code_input += event.unicode
+    
     def draw(self, surface, game_data):  # Added game_data parameter
         """Draw the menu screen"""
         if self.background:
@@ -43,6 +64,15 @@ class MenuScreen(ScreenBase):
                 self.width // 2,
                 self.height // 2 + (i * 40)
             )
+        
+        # Draw code input box
+        color = (255, 255, 255) if self.input_active else (128, 128, 128)
+        pygame.draw.rect(surface, color, self.input_rect, 2)
+        
+        # Draw masked code input (show asterisks)
+        masked_input = "*" * len(self.code_input)
+        text_surface = self.code_font.render(masked_input, True, (255, 255, 255))
+        surface.blit(text_surface, (self.input_rect.x + 5, self.input_rect.y + 5))
 
 class TravelScreen(ScreenBase):
     def __init__(self, *args, **kwargs):
@@ -120,10 +150,16 @@ class MinigameScreen(ScreenBase):
         super().__init__(*args, **kwargs)
         self.ied_game = None
         
-    def init_game(self, battery, lives):
-        """Initialize the IED minigame with current lives count"""
-        self.ied_game = IEDMiniGame(self.width, self.height, battery, lives)
-        print(f"Minigame initialized with battery: {battery}, lives: {lives}")
+    def init_game(self, battery, lives, operator_mode=False):
+        """Initialize the IED minigame with current lives count and operator mode"""
+        self.ied_game = IEDMiniGame(
+            self.width, 
+            self.height, 
+            battery, 
+            lives,
+            operator_mode
+        )
+        print(f"Minigame initialized with battery: {battery}, lives: {lives}, operator mode: {operator_mode}")
         
     def update(self):
         """Update minigame state"""

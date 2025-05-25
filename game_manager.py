@@ -46,6 +46,8 @@ class GameManager:
         # Start menu music
         self.music_manager.play('menu')
         
+        self.operator_mode = False
+        
     def handle_input(self):
         """Handle input events"""
         for event in pygame.event.get():
@@ -53,6 +55,10 @@ class GameManager:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
                 self.handle_keydown(event.key)
+            
+            # Pass events to menu screen for code input
+            if self.current_state == GameState.MENU:
+                self.screens[GameState.MENU].handle_input(event)
         
         # Handle continuous input for minigame
         if self.current_state == GameState.MINIGAME:
@@ -62,6 +68,12 @@ class GameManager:
         """Handle keyboard input"""
         if self.current_state == GameState.MENU:
             if key == pygame.K_1:
+                menu_screen = self.screens[GameState.MENU]
+                # Check for operator code
+                if menu_screen.code_input in ["5337", "5335"]:
+                    self.operator_mode = True
+                    print("Operator mode activated")
+                
                 self.music_manager.play('travel')  # Start travel music
                 self.current_state = GameState.TRAVEL
                 self.timers['travel'] = pygame.time.get_ticks()
@@ -143,10 +155,10 @@ class GameManager:
         """Handle transition to minigame state"""
         self.music_manager.play('minigame')
         minigame_screen = self.screens[GameState.MINIGAME]
-        # Pass current lives from game_data
         minigame_screen.init_game(
             battery=self.game_data['battery'],
-            lives=self.game_data['lives']
+            lives=self.game_data['lives'],
+            operator_mode=self.operator_mode
         )
         print(f"Transitioning to minigame with {self.game_data['lives']} lives")
         self.current_state = GameState.MINIGAME

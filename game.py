@@ -32,7 +32,7 @@ class GameEvents:
         return outcomes
 
 class IEDMiniGame:
-    def __init__(self, screen_width, screen_height, initial_battery=100, lives=3):
+    def __init__(self, screen_width, screen_height, initial_battery=100, lives=3, operator_mode=False):
         self.width = screen_width
         self.height = screen_height
         self.player_pos = [(screen_width // 2) - 60, (screen_height // 2) - 60]
@@ -40,6 +40,7 @@ class IEDMiniGame:
         self.lives = lives
         self.game_over = False
         self.success = False
+        self.operator_mode = operator_mode
 
         # Define movement speed
         self.MOVE_SPEED = 12  # Adjust this value as needed
@@ -303,7 +304,13 @@ class IEDMiniGame:
     def spawn_obstacle(self):
         """Spawn new falling obstacle at random x position"""
         x = random.randint(0, self.width - 50)
-        obstacle_type = random.choice(['tnt', 'doge'])
+        
+        # Only spawn TNT if not in operator mode, both types if in operator mode
+        if self.operator_mode:
+            obstacle_type = random.choice(['tnt', 'doge'])
+        else:
+            obstacle_type = 'tnt'
+            
         sprite = self.tnt_sprite if obstacle_type == 'tnt' else self.doge_sprite
         self.obstacles.append({
             'type': obstacle_type,
