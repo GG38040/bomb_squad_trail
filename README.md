@@ -1,8 +1,9 @@
 ## 🎬 Gameplay Trailer
 
-Check out the latest trailer for Bomb Squad Trail!
+[![Watch the Bomb Squad Trail Gameplay Trailer](https://img.youtube.com/vi/gxsy8IfdxPY/maxresdefault.jpg)](https://youtu.be/gxsy8IfdxPY)
 
-[![Watch the Bomb Squad Trail Gameplay Trailer](https://img.youtube.com/vi/dpgXirY45ZY/maxresdefault.jpg)](https://youtu.be/dpgXirY45ZY)
+Click the image above or [watch the trailer on YouTube](https://youtu.be/gxsy8IfdxPY).
+
 
 
 
