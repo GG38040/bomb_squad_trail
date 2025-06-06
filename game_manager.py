@@ -105,6 +105,9 @@ class GameManager:
         if self.current_state == GameState.MINIGAME:
             current_screen.update()
             minigame = current_screen.ied_game
+
+            if minigame:
+                minigame.points = self.game_data['points']
             
             if minigame and minigame.game_over:
                 if minigame.success:
@@ -158,7 +161,8 @@ class GameManager:
         minigame_screen.init_game(
             battery=self.game_data['battery'],
             lives=self.game_data['lives'],
-            operator_mode=self.operator_mode
+            operator_mode=self.operator_mode,
+            points=self.game_data['points'],
         )
         print(f"Transitioning to minigame with {self.game_data['lives']} lives")
         self.current_state = GameState.MINIGAME

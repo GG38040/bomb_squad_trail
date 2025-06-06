@@ -32,7 +32,7 @@ class GameEvents:
         return outcomes
 
 class IEDMiniGame:
-    def __init__(self, screen_width, screen_height, initial_battery=100, lives=3, operator_mode=False):
+    def __init__(self, screen_width, screen_height, initial_battery=100, lives=3, operator_mode=False, points=0):
         self.width = screen_width
         self.height = screen_height
         self.player_pos = [(screen_width // 2) - 60, (screen_height // 2) - 60]
@@ -41,6 +41,7 @@ class IEDMiniGame:
         self.game_over = False
         self.success = False
         self.operator_mode = operator_mode
+        self.points = points
 
         # Define movement speed
         self.MOVE_SPEED = 12  # Adjust this value as needed
@@ -203,13 +204,13 @@ class IEDMiniGame:
                    (self.width//2 - game_over_text.get_width()//2, 
                     self.height//2 - 100))
         
-        # Display remaining battery as a placeholder score
-        battery_text = self.game_over_font.render(
-            f"Battery: {self.battery:.0f}%", True, (255, 255, 0)
+        # Display final score
+        score_text = self.game_over_font.render(
+            f"Final Score: {int(self.points)}", True, (255, 255, 0)
         )
         screen.blit(
-            battery_text,
-            (self.width // 2 - battery_text.get_width() // 2, self.height // 2),
+            score_text,
+            (self.width // 2 - score_text.get_width() // 2, self.height // 2),
         )
 
     def reset_game(self):

@@ -150,14 +150,15 @@ class MinigameScreen(ScreenBase):
         super().__init__(*args, **kwargs)
         self.ied_game = None
         
-    def init_game(self, battery, lives, operator_mode=False):
+    def init_game(self, battery, lives, operator_mode=False, points=0):
         """Initialize the IED minigame with current lives count and operator mode"""
         self.ied_game = IEDMiniGame(
-            self.width, 
-            self.height, 
-            battery, 
+            self.width,
+            self.height,
+            battery,
             lives,
-            operator_mode
+            operator_mode,
+            points,
         )
         print(f"Minigame initialized with battery: {battery}, lives: {lives}, operator mode: {operator_mode}")
         
