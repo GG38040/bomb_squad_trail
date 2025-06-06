@@ -203,11 +203,14 @@ class IEDMiniGame:
                    (self.width//2 - game_over_text.get_width()//2, 
                     self.height//2 - 100))
         
-        # Draw final points
-        points_text = self.game_over_font.render(f"Final Score: {self.points}", True, (255, 255, 0))
-        screen.blit(points_text,
-                   (self.width//2 - points_text.get_width()//2,
-                    self.height//2))
+        # Display remaining battery as a placeholder score
+        battery_text = self.game_over_font.render(
+            f"Battery: {self.battery:.0f}%", True, (255, 255, 0)
+        )
+        screen.blit(
+            battery_text,
+            (self.width // 2 - battery_text.get_width() // 2, self.height // 2),
+        )
 
     def reset_game(self):
         """Reset the game state for another attempt"""
