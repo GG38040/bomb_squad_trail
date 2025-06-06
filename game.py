@@ -339,7 +339,7 @@ class IEDMiniGame:
 
     def draw_celebration_screen(self, screen):
         """Draw the celebration screen when the player wins"""
-        # Scale the celebration background to 75% of the screen size
+        # Scale the celebration background to full screen size
         scaled_width = int(self.width * 1.00)
         scaled_height = int(self.height * 1.00)
         scaled_bg = pygame.transform.scale(self.celebration_background, (scaled_width, scaled_height))
