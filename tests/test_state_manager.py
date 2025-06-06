@@ -14,4 +14,3 @@ def test_change_state_updates_current_and_previous():
     sm.change_state(GameState.MINIGAME)
     assert sm.previous_state == GameState.TRAVEL
     assert sm.current_state == GameState.MINIGAME
-
