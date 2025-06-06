@@ -79,6 +79,22 @@ Every contribution makes a difference for EOD warriors and their families.
 
 ---
 
+## 🧪 Running Tests
+
+Ensure `pytest` and `pygame` are installed:
+
+```bash
+pip install pytest pygame
+```
+
+Run the test suite from the project root:
+
+```bash
+pytest
+```
+
+---
+
 ## 🙏 A Final Word
 
 **Memorial Day is a time to remember, reflect, and carry on the legacy of service.  
